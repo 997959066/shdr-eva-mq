@@ -48,20 +48,8 @@ public class RabbitMQClient implements MessageQueueClient {
     }
 
     @Override
-    public void sendOne(String destination, byte[] message) throws IOException {
-        log.info("Sending message to {}: {}", destination, new String(message));
-        channel.queueDeclare(destination, true, false, false, null); // 确保目标队列存在
-        channel.basicPublish("", destination, null, message);       // 发送消息到默认 direct 交换机
-        try {
-            if (!channel.waitForConfirms()) { // 等待确认
-                log.error("Message to {} not acknowledged by broker!", destination);
-                throw new IOException("Publish not confirmed by broker.");
-            }
-            log.info("Message to {} confirmed by broker.", destination);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IOException("Publish confirmation interrupted.", e);
-        }
+    public void sendOne(String exchange, byte[] message) throws IOException {
+        publishFanout( exchange,  message);
     }
 
     @Override
@@ -156,7 +144,7 @@ public class RabbitMQClient implements MessageQueueClient {
     }
 
     /** 关闭资源 */
-    public void close() throws IOException, TimeoutException {
+    public void close() {
         if (channel != null && channel.isOpen()) {
             try {
                 log.info("Closing RabbitMQ channel.");
