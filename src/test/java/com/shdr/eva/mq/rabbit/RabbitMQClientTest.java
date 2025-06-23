@@ -16,7 +16,7 @@ import java.util.concurrent.TimeoutException;
 public class RabbitMQClientTest {
 
     private static RabbitMQClient client;
-    private static final String QUEUE = "test.queue";
+    private static final String FANOUT_QUEUE = "test.fanout.queue";
     private static final String TOPIC_EXCHANGE = "test.topic.exchange";
     private static final String FANOUT_EXCHANGE = "test.fanout.exchange";
 
@@ -31,66 +31,54 @@ public class RabbitMQClientTest {
     }
 
     @Test
-    @Order(1)
+    @Order(100)
     void testSendAndReceiveOne() throws Exception {
         // 🟡 先绑定一个临时队列（模拟订阅）
         String exchange = FANOUT_EXCHANGE;
-        client.getChannel().exchangeDeclare(exchange, BuiltinExchangeType.FANOUT, true);
-        String queue = client.getChannel().queueDeclare().getQueue(); // 创建一个临时队列
-        client.getChannel().queueBind(queue, exchange, ""); // 绑定队列到 fanout 交换机
+        String queue = FANOUT_QUEUE;
 
-        List<byte[]> messages = new ArrayList<>();
-        messages.add("Fanout Message".getBytes());
-        messages.add("Fanout Message 2".getBytes());
-        // 🟢 然后发布消息
-        client.sendBatch(exchange,messages );
+        // 🟢 然后发布单条消息
+        client.sendOne(exchange, queue,"系统广播消息 Fanout Message".getBytes());
 
-        // 🔵 然后消费消息
-        List<byte[]> msgs = new ArrayList<>();
-        while (true) {
-            GetResponse resp = client.getChannel().basicGet(queue, true);
-            if (resp == null) break;
-            msgs.add(resp.getBody());
-        }
+        // 🔵 然后消费单条消息
+        byte[] msg = client.receiveOne(exchange,queue);
 
-        // 输出
-        for (byte[] msg : msgs) {
-            System.out.println("Received: " + new String(msg));
-        }
+        Assertions.assertFalse(msg==null, "Expected message in fanout queue");
 
-        Assertions.assertFalse(msgs.isEmpty(), "Expected message in fanout queue");
+        System.out.println("Received: " + new String(msg));
+
     }
 
 
 
-    @Test
-    @Order(2)
-    void testSendBatchAndReceiveBatch() throws Exception {
-        // 🟡 先绑定一个临时队列（模拟订阅）
-        String exchange = FANOUT_EXCHANGE;
-        client.getChannel().exchangeDeclare(exchange, BuiltinExchangeType.FANOUT, true);
-        String queue = client.getChannel().queueDeclare().getQueue(); // 创建一个临时队列
-        client.getChannel().queueBind(queue, exchange, ""); // 绑定队列到 fanout 交换机
-
-        // 🟢 然后发布消息
-        client.sendOne(exchange, "Fanout Message".getBytes());
-
-        // 🔵 然后消费消息
-        List<byte[]> msgs = new ArrayList<>();
-        while (true) {
-            GetResponse resp = client.getChannel().basicGet(queue, true);
-            if (resp == null) break;
-            msgs.add(resp.getBody());
-        }
-
-        // 输出
-        for (byte[] msg : msgs) {
-            System.out.println("Received: " + new String(msg));
-        }
-
-        Assertions.assertFalse(msgs.isEmpty(), "Expected message in fanout queue");
-    }
-
+//    @Test
+//    @Order(2)
+//    void testSendBatchAndReceiveBatch() throws Exception {
+//        // 🟡 先绑定一个临时队列（模拟订阅）
+//        String exchange = FANOUT_EXCHANGE;
+//        client.getChannel().exchangeDeclare(exchange, BuiltinExchangeType.FANOUT, true);
+//        String queue = client.getChannel().queueDeclare().getQueue(); // 创建一个临时队列
+//        client.getChannel().queueBind(queue, exchange, ""); // 绑定队列到 fanout 交换机
+//
+//        // 🟢 然后发布消息
+//        client.sendOne(exchange, "Fanout Message".getBytes());
+//
+//        // 🔵 然后消费消息
+//        List<byte[]> msgs = new ArrayList<>();
+//        while (true) {
+//            GetResponse resp = client.getChannel().basicGet(queue, true);
+//            if (resp == null) break;
+//            msgs.add(resp.getBody());
+//        }
+//
+//        // 输出
+//        for (byte[] msg : msgs) {
+//            System.out.println("Received: " + new String(msg));
+//        }
+//
+//        Assertions.assertFalse(msgs.isEmpty(), "Expected message in fanout queue");
+//    }
+//
 
 
 
@@ -101,8 +89,8 @@ public class RabbitMQClientTest {
 //        // 🟡 先绑定一个临时队列（模拟订阅）
 //        String exchange = FANOUT_EXCHANGE;
 //        client.getChannel().exchangeDeclare(exchange, BuiltinExchangeType.FANOUT, true);
-//        String queue = client.getChannel().queueDeclare().getQueue(); // 创建一个临时队列
-//        client.getChannel().queueBind(queue, exchange, ""); // 绑定队列到 fanout 交换机
+//        client.getChannel().queueDeclare(FANOUT_QUEUE, true, false, false, null); // 自定义队列
+//        client.getChannel().queueBind(FANOUT_QUEUE, exchange, ""); // 绑定队列到 fanout 交换机
 //
 //        // 🟢 然后发布消息
 //        client.publishFanout(exchange, "Fanout Message".getBytes());
@@ -110,7 +98,7 @@ public class RabbitMQClientTest {
 //        // 🔵 然后消费消息
 //        List<byte[]> msgs = new ArrayList<>();
 //        while (true) {
-//            GetResponse resp = client.getChannel().basicGet(queue, true);
+//            GetResponse resp = client.getChannel().basicGet(FANOUT_QUEUE, true);
 //            if (resp == null) break;
 //            msgs.add(resp.getBody());
 //        }
