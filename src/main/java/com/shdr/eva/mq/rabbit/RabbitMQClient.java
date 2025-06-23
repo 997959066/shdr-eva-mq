@@ -59,10 +59,10 @@ public class RabbitMQClient implements MessageQueueClient {
     }
 
     @Override
-    public void sendBatch(String destination, List<byte[]> messages) throws IOException {
-//        for (byte[] msg : messages) {
-//            sendOne(destination, msg); // 逐条发送
-//        }
+    public void sendBatch(String exchange,String queue, List<byte[]> messages) throws IOException {
+        for (byte[] msg : messages) {
+            sendOne(exchange,queue, msg); // 逐条发送
+        }
     }
 
     @Override
@@ -87,73 +87,29 @@ public class RabbitMQClient implements MessageQueueClient {
     }
 
     @Override
-    public List<byte[]> receiveBatch(String source, int maxCount) throws IOException {
+    public List<byte[]> receiveBatch(String exchange,String queue, int maxCount) throws IOException {
         List<byte[]> list = new ArrayList<>();
         for (int i = 0; i < maxCount; i++) {
-//            byte[] msg = receiveOne(source);
-//            if (msg == null) break;
-//            list.add(msg);
+            byte[] msg = receiveOne(exchange,queue);
+            if (msg == null) break;
+            list.add(msg);
         }
-        log.info("Received {} messages from {}", list.size(), source);
+        log.info("Received {} messages from {}", list.size(), exchange);
         return list;
     }
 
-    /** 发布到 Topic 交换机 */
-//    public void publishTopic(String exchange, String routingKey, byte[] message) throws IOException {
-//        publishExchange(exchange, routingKey, message, BuiltinExchangeType.TOPIC);
-//    }
-
-    /** 订阅 Topic 消息 */
-//    public List<byte[]> subscribeTopic(String exchange, String bindingKey) throws IOException {
-//        return subscribeExchange(exchange, bindingKey, BuiltinExchangeType.TOPIC);
-//    }
 
     /**
      * 发布到 Fanout（广播）交换机
      */
-    public void publishFanout(String exchange,String queue, byte[] message) throws IOException {
-        publishExchange(exchange, queue,"", message, BuiltinExchangeType.FANOUT);
-    }
-
-    /**
-     * 订阅 Fanout 消息
-     */
-    public List<byte[]> subscribeFanout(String exchange) throws IOException {
-        return subscribeExchange(exchange, "", BuiltinExchangeType.FANOUT);
-    }
-
-
-
-    /**
-     * 通用交换机发布逻辑（支持 direct、fanout、topic）
-     */
-    public void publishExchange(String exchange, String queue,String routingKey, byte[] message, BuiltinExchangeType type) throws IOException {
-        log.info("Publishing to exchange={} type={} routingKey={} payload={}",
-                exchange, type, routingKey, new String(message));
-        getChannel().exchangeDeclare(exchange, type, true); // 声明交换机
+    public void publishFanout(String exchange, String queue, byte[] message) throws IOException {
+        log.info("Publishing to exchange={}payload={}", exchange, new String(message));
+        getChannel().exchangeDeclare(exchange, BuiltinExchangeType.FANOUT, true); // 声明交换机
         getChannel().queueDeclare(queue, true, false, false, null); // 自定义队列
         getChannel().queueBind(queue, exchange, ""); // 绑定队列到 fanout 交换机
-        getChannel().basicPublish(exchange, routingKey, null, message); // 发送消息
+        getChannel().basicPublish(exchange, "", null, message); // 发送消息
     }
 
-    /**
-     * 通用交换机订阅逻辑
-     */
-    public List<byte[]> subscribeExchange(String exchange, String bindingKey, BuiltinExchangeType type) throws IOException {
-        channel.exchangeDeclare(exchange, type, true); // 声明交换机
-        String queueName = channel.queueDeclare().getQueue(); // 创建临时队列
-        channel.queueBind(queueName, exchange, bindingKey);   // 绑定队列到交换机
-        log.info("Queue {} bound to exchange {} with key {}", queueName, exchange, bindingKey);
-
-        List<byte[]> msgs = new ArrayList<>();
-        while (true) {
-            GetResponse response = channel.basicGet(queueName, true); // 拉取消息
-            if (response == null) break;
-            msgs.add(response.getBody());
-        }
-        log.info("Received {} messages from exchange {} via queue {}", msgs.size(), exchange, queueName);
-        return msgs;
-    }
 
     public  byte[] subscribeExchangeOne(String exchange, String queue ,BuiltinExchangeType type) throws IOException {
         log.debug("Subscribing to FANOUT exchange: {}", exchange);

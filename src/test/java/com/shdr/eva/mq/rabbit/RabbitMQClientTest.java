@@ -36,10 +36,8 @@ public class RabbitMQClientTest {
         // 🟡 先绑定一个临时队列（模拟订阅）
         String exchange = FANOUT_EXCHANGE;
         String queue = FANOUT_QUEUE;
-
         // 🟢 然后发布单条消息
         client.sendOne(exchange, queue,"系统广播消息 Fanout Message".getBytes());
-
         // 🔵 然后消费单条消息
         byte[] msg = client.receiveOne(exchange,queue);
 
@@ -51,34 +49,32 @@ public class RabbitMQClientTest {
 
 
 
-//    @Test
-//    @Order(2)
-//    void testSendBatchAndReceiveBatch() throws Exception {
-//        // 🟡 先绑定一个临时队列（模拟订阅）
-//        String exchange = FANOUT_EXCHANGE;
-//        client.getChannel().exchangeDeclare(exchange, BuiltinExchangeType.FANOUT, true);
-//        String queue = client.getChannel().queueDeclare().getQueue(); // 创建一个临时队列
-//        client.getChannel().queueBind(queue, exchange, ""); // 绑定队列到 fanout 交换机
-//
-//        // 🟢 然后发布消息
-//        client.sendOne(exchange, "Fanout Message".getBytes());
-//
-//        // 🔵 然后消费消息
-//        List<byte[]> msgs = new ArrayList<>();
-//        while (true) {
-//            GetResponse resp = client.getChannel().basicGet(queue, true);
-//            if (resp == null) break;
-//            msgs.add(resp.getBody());
-//        }
-//
-//        // 输出
-//        for (byte[] msg : msgs) {
-//            System.out.println("Received: " + new String(msg));
-//        }
-//
-//        Assertions.assertFalse(msgs.isEmpty(), "Expected message in fanout queue");
-//    }
-//
+    @Test
+    @Order(2)
+    void testSendBatchAndReceiveBatch() throws Exception {
+        String exchange = FANOUT_EXCHANGE;
+        String queue = FANOUT_QUEUE;
+
+        List<byte[]> messages = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            String s = i+"__系统广播消息 Fanout Message";
+            messages.add(s.getBytes());
+        }
+
+        // 🟢 然后发多条消息
+        client.sendBatch(exchange, queue,messages);
+
+        // 🔵 然后消费多条消息
+        List<byte[]> msgs = client.receiveBatch(exchange,queue,6);
+
+        Assertions.assertFalse(msgs.isEmpty(), "Expected message in fanout queue");
+
+        for (byte[] msg : msgs) {
+            System.out.println("Received: " + new String(msg));
+        }
+
+    }
+
 
 
 
