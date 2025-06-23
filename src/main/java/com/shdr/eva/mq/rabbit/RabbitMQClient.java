@@ -54,14 +54,14 @@ public class RabbitMQClient implements MessageQueueClient {
     }
 
     @Override
-    public void sendOne(String exchange,String queue, byte[] message) throws IOException {
-        publishFanout(exchange, queue, message);
+    public void sendOne(String exchange, byte[] message) throws IOException {
+        publishFanout(exchange, message);
     }
 
     @Override
-    public void sendBatch(String exchange,String queue, List<byte[]> messages) throws IOException {
+    public void sendBatch(String exchange, List<byte[]> messages) throws IOException {
         for (byte[] msg : messages) {
-            sendOne(exchange,queue, msg); // 逐条发送
+            sendOne(exchange, msg); // 逐条发送
         }
     }
 
@@ -102,11 +102,9 @@ public class RabbitMQClient implements MessageQueueClient {
     /**
      * 发布到 Fanout（广播）交换机
      */
-    public void publishFanout(String exchange, String queue, byte[] message) throws IOException {
+    public void publishFanout(String exchange, byte[] message) throws IOException {
         log.info("Publishing to exchange={}payload={}", exchange, new String(message));
         getChannel().exchangeDeclare(exchange, BuiltinExchangeType.FANOUT, true); // 声明交换机
-        getChannel().queueDeclare(queue, true, false, false, null); // 自定义队列
-        getChannel().queueBind(queue, exchange, ""); // 绑定队列到 fanout 交换机
         getChannel().basicPublish(exchange, "", null, message); // 发送消息
     }
 

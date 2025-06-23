@@ -13,14 +13,14 @@ public interface MessageQueueClient {
      * @param message 消息内容（字节数组）
      * @throws Exception 发送失败时抛出异常
      */
-    void sendOne(String exchange,String queue,  byte[] message) throws Exception;
+    void sendOne(String exchange, byte[] message) throws Exception;
     /**
      * 批量发送多条消息到指定目的地（队列）
      * @param exchange 交换机名称
      * @param messages 消息列表（字节数组）
      * @throws Exception 发送失败时抛出异常
      */
-    void sendBatch(String exchange,String queue, List<byte[]> messages) throws Exception;
+    void sendBatch(String exchange, List<byte[]> messages) throws Exception;
     /**
      * 从指定队列拉取一条消息（自动确认）
      * @param exchange 交换机名称
