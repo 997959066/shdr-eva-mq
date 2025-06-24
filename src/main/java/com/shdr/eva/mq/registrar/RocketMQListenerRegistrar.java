@@ -49,7 +49,7 @@ public class RocketMQListenerRegistrar {
     private void registerRocketMQConsumer(Object bean, Method method, String topic, String group) throws Exception {
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(group);
         consumer.setNamesrvAddr(namesrvAddr);
-        consumer.subscribe(topic, group);
+        consumer.subscribe(topic, "*");
 
         consumer.registerMessageListener((MessageListenerConcurrently) (msgs, context) -> {
             for (MessageExt msgExt : msgs) {
