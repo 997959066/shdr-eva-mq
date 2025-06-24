@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 @Slf4j
 public class RocketMQClient implements MessageQueueClient {
@@ -133,6 +134,24 @@ public class RocketMQClient implements MessageQueueClient {
 
         consumer.shutdown();
         return received;
+    }
+
+    @Override
+    public void onMessage(String topic, String group, Consumer<byte[]> callback) throws Exception {
+        DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(group);
+        consumer.setNamesrvAddr(namesrvAddr);
+        consumer.subscribe(topic, "*");
+        consumer.setMessageModel(MessageModel.BROADCASTING); // ✅ 广播模式
+
+        consumer.registerMessageListener((MessageListenerConcurrently) (msgs, context) -> {
+            for (MessageExt msg : msgs) {
+                callback.accept(msg.getBody());
+            }
+            return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
+        });
+
+        consumer.start();
+        System.out.println("🚀 RocketMQ Consumer started. Listening continuously on topic: " + topic + ", group: " + group);
     }
 
 

@@ -1,5 +1,6 @@
 package com.shdr.eva.mq.rabbit;
 
+import com.shdr.eva.mq.MessageQueueClient;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
@@ -38,14 +39,6 @@ public class RabbitMQClientTest {
         // 🟢 然后发布单条消息
         client.sendOne(exchange, "单条系统广播消息 Fanout Message".getBytes());
 
-        // 🔵 然后消费单条消息
-        byte[] msg = client.receiveOne(exchange, queue);
-
-        if (msg == null) {
-            System.out.println("No messages received");
-            return;
-        }
-        System.out.println("📌  Received: " + new String(msg));
 
     }
 
@@ -70,6 +63,21 @@ public class RabbitMQClientTest {
     }
 
 
+    @Test
+    @Order(4)
+    void onMessage() throws Exception {
+        MessageQueueClient rabbit = new RabbitMQClient();
+
+        rabbit.onMessage(FANOUT_EXCHANGE, FANOUT_QUEUE, body -> {
+            System.out.println("📩 RabbitMQ 收到消息：" + new String(body));
+        });
+        // 保持主线程存活
+        Thread.currentThread().join();
+
+    }
+
+
+
     /**
      * 多条接收
      * @throws Exception
@@ -91,6 +99,9 @@ public class RabbitMQClientTest {
         msgList.forEach(msg -> System.out.println("📌 Received: " + new String(msg)));
 
     }
+
+
+
 
 }
 

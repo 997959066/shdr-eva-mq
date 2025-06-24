@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 
 /**
  * RabbitMQ 实现，支持基础发送接收、topic与fanout发布订阅、批量与缓存发送
@@ -103,4 +104,30 @@ public class RabbitMQClient implements MessageQueueClient {
             }
         }
     }
+
+
+    @Override
+    public void onMessage(String topic, String group, Consumer<byte[]> callback) throws Exception {
+        log.info("🐇 [RabbitMQ] Listening continuously on topic={}, queue={}", topic, group);
+
+        // 声明 fanout 类型交换机
+        channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true);
+
+        // 声明并绑定队列（这里 queue 就是 group）
+        channel.queueDeclare(group, true, false, false, null);
+        channel.queueBind(group, topic, "");
+
+        // 定义消费者
+        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+            byte[] body = delivery.getBody();
+            log.info("📨 Received message from RabbitMQ: {}", new String(body));
+            callback.accept(body);
+        };
+
+        // 开始消费
+        channel.basicConsume(group, true, deliverCallback, consumerTag -> {
+            log.warn("❌ Consumer cancelled: {}", consumerTag);
+        });
+    }
+
 }

@@ -1,6 +1,7 @@
 package com.shdr.eva.mq;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 
 public interface MessageQueueClient {
@@ -21,6 +22,15 @@ public interface MessageQueueClient {
      */
     void sendBatch(String topic, List<byte[]> messages) throws Exception;
 
+
+    /**
+     * 持续监听（异步消费）
+     * @param topic
+     * @param group
+     * @param callback
+     * @throws Exception
+     */
+    void onMessage(String topic, String group,  Consumer<byte[]> callback) throws Exception;
     /**
      * 从指定队列拉取一条消息
      * @param topic 主题
@@ -37,7 +47,6 @@ public interface MessageQueueClient {
      * @throws Exception 拉取失败时抛出异常
      */
     List<byte[]> receiveBatch(String topic,String group, int maxCount) throws Exception;
-
 
 
 }
