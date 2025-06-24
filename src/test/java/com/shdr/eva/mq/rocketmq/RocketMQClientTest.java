@@ -1,5 +1,6 @@
 package com.shdr.eva.mq.rocketmq;
 
+import com.alibaba.fastjson.JSON;
 import com.shdr.eva.mq.MessageQueueClient;
 import com.shdr.eva.mq.rabbit.RabbitMQClient;
 import org.junit.jupiter.api.*;
@@ -59,7 +60,7 @@ public class RocketMQClientTest {
         MessageQueueClient rabbit = new RocketMQClient();
 
         rabbit.onMessage(TEST_TOPIC, TEST_GROUP, body -> {
-            System.out.println("📩 RabbitMQ 收到消息：" + new String(body));
+            System.out.println("📩 RabbitMQ 收到消息：" + JSON.toJSONString(body));
         });
         // 保持主线程存活
         Thread.currentThread().join();

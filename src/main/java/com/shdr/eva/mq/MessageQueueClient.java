@@ -1,5 +1,7 @@
 package com.shdr.eva.mq;
 
+import com.shdr.eva.mq.common.Message;
+
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -23,14 +25,7 @@ public interface MessageQueueClient {
     void sendBatch(String topic, List<byte[]> messages) throws Exception;
 
 
-    /**
-     * 持续监听（异步消费）
-     * @param topic
-     * @param group
-     * @param callback
-     * @throws Exception
-     */
-    void onMessage(String topic, String group,  Consumer<byte[]> callback) throws Exception;
+    void onMessage(String topic, String group, Consumer<Message> callback) throws Exception;
     /**
      * 从指定队列拉取一条消息
      * @param topic 主题

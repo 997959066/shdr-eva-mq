@@ -4,9 +4,7 @@ package com.shdr.eva.mq.rocketmq;
 import com.shdr.eva.mq.MessageQueueClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
-import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
-import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.common.message.Message;
@@ -53,6 +51,8 @@ public class RocketMQClient implements MessageQueueClient {
             sendOne(topic, msg); // 逐条发送
         }
     }
+
+
 
     /**
      * 广播模式下消费者必须「实时在线」！
@@ -137,7 +137,7 @@ public class RocketMQClient implements MessageQueueClient {
     }
 
     @Override
-    public void onMessage(String topic, String group, Consumer<byte[]> callback) throws Exception {
+    public void onMessage(String topic, String group, Consumer<com.shdr.eva.mq.common.Message> callback) throws Exception {
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(group);
         consumer.setNamesrvAddr(namesrvAddr);
         consumer.subscribe(topic, "*");
@@ -145,7 +145,8 @@ public class RocketMQClient implements MessageQueueClient {
 
         consumer.registerMessageListener((MessageListenerConcurrently) (msgs, context) -> {
             for (MessageExt msg : msgs) {
-                callback.accept(msg.getBody());
+                com.shdr.eva.mq.common.Message message = new com.shdr.eva.mq.common.Message(topic, group, msg.getBody(), msg.getMsgId()); // traceId暂时传null或从消息属性获取
+                callback.accept(message);
             }
             return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
         });

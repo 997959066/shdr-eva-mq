@@ -2,6 +2,7 @@ package com.shdr.eva.mq.rabbit;
 
 import com.rabbitmq.client.*;
 import com.shdr.eva.mq.MessageQueueClient;
+import com.shdr.eva.mq.common.Message;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 
@@ -107,9 +108,7 @@ public class RabbitMQClient implements MessageQueueClient {
 
 
     @Override
-    public void onMessage(String topic, String group, Consumer<byte[]> callback) throws Exception {
-        log.info("🐇 [RabbitMQ] Listening continuously on topic={}, queue={}", topic, group);
-
+    public void onMessage(String topic, String group, Consumer<Message> callback) throws Exception {
         // 声明 fanout 类型交换机
         channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true);
 
@@ -120,8 +119,11 @@ public class RabbitMQClient implements MessageQueueClient {
         // 定义消费者
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
             byte[] body = delivery.getBody();
-            log.info("📨 Received message from RabbitMQ: {}", new String(body));
-            callback.accept(body);
+            String messageId = delivery.getProperties().getMessageId();
+            // 构造自定义 Message 对象
+            Message msg = new Message(topic, group, body, messageId); // traceId暂时传null或从消息属性获取
+//            log.info("📨 Received message from RabbitMQ: {}", new String(body));
+            callback.accept(msg);
         };
 
         // 开始消费
