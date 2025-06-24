@@ -1,9 +1,7 @@
 package com.shdr.eva.mq.rocketmq.inject;
 
-import com.shdr.eva.mq.rabbit.RabbitMQClient;
-import com.shdr.eva.mq.rocketmq.RocketMQClient;
-import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.shdr.eva.mq.annotation.RocketMQListener;
+import com.shdr.eva.mq.common.Message;
 import org.springframework.stereotype.Service;
 
 /**
@@ -12,18 +10,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class RocketConsumer {
 
-    @Autowired
-    private RocketMQClient rocketMQClient;
-
-    private static final String TEST_TOPIC = "testTopic";
-    private static final String TEST_GROUP = "testGroup";
-
-
-    @PostConstruct
-    public void init() throws Exception {
-        rocketMQClient.onMessage(TEST_TOPIC, TEST_GROUP, message -> {
-            System.out.println("Received "  + message.toString());
-        });
+    @RocketMQListener(topic = "testTopic", group = "testGroup")
+    public void handleMessage(Message message) {
+        System.out.println("🚀 [RocketMQ] 收到消息: " + message.toString());
     }
 }
 

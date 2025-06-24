@@ -24,8 +24,15 @@ public interface MessageQueueClient {
      */
     void sendBatch(String topic, List<byte[]> messages) throws Exception;
 
-
+    /**
+     * 消息持续监听
+     * @param topic
+     * @param group
+     * @param callback
+     * @throws Exception
+     */
     void onMessage(String topic, String group, Consumer<Message> callback) throws Exception;
+
     /**
      * 从指定队列拉取一条消息
      * @param topic 主题
