@@ -89,7 +89,7 @@ public class RabbitMQClientTest {
 //    @Order(5)
 //    void testPublishSubscribeFanout() throws Exception {
 //        // 🟡 先绑定一个临时队列（模拟订阅）
-//        String exchange = FANOUT_EXCHANGE;
+//        String topic = FANOUT_EXCHANGE;
 //        client.getChannel().exchangeDeclare(exchange, BuiltinExchangeType.FANOUT, true);
 //        client.getChannel().queueDeclare(FANOUT_QUEUE, true, false, false, null); // 自定义队列
 //        client.getChannel().queueBind(FANOUT_QUEUE, exchange, ""); // 绑定队列到 fanout 交换机

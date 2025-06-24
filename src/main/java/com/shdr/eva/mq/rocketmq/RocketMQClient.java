@@ -34,22 +34,22 @@ public class RocketMQClient implements MessageQueueClient {
     }
 
     @Override
-    public void sendOne(String exchange, byte[] message) throws Exception {
+    public void sendOne(String topic, byte[] message) throws Exception {
         //组只是逻辑分组名，不影响广播行为➤ 可以固定一个名字，也可以多个生产者共享，不影响广播
         DefaultMQProducer producer = new DefaultMQProducer("rocketmq-producer-group");
         producer.setNamesrvAddr(namesrvAddr);
         producer.start();
 
-        Message msg = new Message(exchange, "TagA", message);
+        Message msg = new Message(topic, "TagA", message);
         producer.send(msg);
         System.out.println(msg.toString());
         producer.shutdown();
     }
 
     @Override
-    public void sendBatch(String exchange, List<byte[]> messages) throws Exception {
+    public void sendBatch(String topic, List<byte[]> messages) throws Exception {
         for (byte[] msg : messages) {
-            sendOne(exchange, msg); // 逐条发送
+            sendOne(topic, msg); // 逐条发送
         }
     }
 
@@ -62,20 +62,20 @@ public class RocketMQClient implements MessageQueueClient {
      *
      *
      * 集群模式下 RocketMQ 会保留消息直到被消费
-     * @param exchange 交换机名称
+     * @param topic 交换机名称
      * @param queue
      * @return
      * @throws Exception
      */
     @Override
-    public byte[] receiveOne(String exchange, String queue) throws Exception {
+    public byte[] receiveOne(String topic, String queue) throws Exception {
 
         final byte[][] result = {null};
 
 
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(queue);
         consumer.setNamesrvAddr(namesrvAddr);
-        consumer.subscribe(exchange, "*");
+        consumer.subscribe(topic, "*");
 
         CountDownLatch latch = new CountDownLatch(1);
 
@@ -100,12 +100,12 @@ public class RocketMQClient implements MessageQueueClient {
     }
 
     @Override
-    public List<byte[]> receiveBatch(String exchange, String queue, int maxCount) throws Exception {
+    public List<byte[]> receiveBatch(String topic, String queue, int maxCount) throws Exception {
         List<byte[]> received = Collections.synchronizedList(new ArrayList<>());
 
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(queue);
         consumer.setNamesrvAddr(namesrvAddr);
-        consumer.subscribe(exchange, "*");
+        consumer.subscribe(topic, "*");
         consumer.setMessageModel(MessageModel.BROADCASTING); // ✅ 广播模式
 
         CountDownLatch latch = new CountDownLatch(maxCount);

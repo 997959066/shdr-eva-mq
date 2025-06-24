@@ -41,61 +41,46 @@ public class RabbitMQClient implements MessageQueueClient {
         return this.channel;
     }
 
-
-
-
     @Override
-    public void sendOne(String exchange, byte[] message) throws IOException {
-        publishFanout(exchange, message);
+    public void sendOne(String topic, byte[] message) throws IOException {
+        log.info("Publishing to exchange={}payload={}", topic, new String(message));
+        getChannel().exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
+        getChannel().basicPublish(topic, "", null, message); // 发送消息
     }
 
     @Override
-    public void sendBatch(String exchange, List<byte[]> messages) throws IOException {
+    public void sendBatch(String topic, List<byte[]> messages) throws IOException {
         for (byte[] msg : messages) {
-            sendOne(exchange, msg); // 逐条发送
+            sendOne(topic, msg); // 逐条发送
         }
     }
 
 
     @Override
-    public byte[] receiveOne(String exchange,String queue ) throws IOException {
-        log.info("Receiving message from {}", exchange);
-        return subscribeExchangeOne(exchange,  queue,  BuiltinExchangeType.FANOUT);
-    }
-
-    @Override
-    public List<byte[]> receiveBatch(String exchange,String queue, int maxCount) throws IOException {
-        List<byte[]> list = new ArrayList<>();
-        for (int i = 0; i < maxCount; i++) {
-            byte[] msg = receiveOne(exchange,queue);
-            if (msg == null) break;
-            list.add(msg);
-        }
-        log.info("Received {} messages from {}", list.size(), exchange);
-        return list;
-    }
-
-
-    /**
-     * 发布到 Fanout（广播）交换机
-     */
-    public void publishFanout(String exchange, byte[] message) throws IOException {
-        log.info("Publishing to exchange={}payload={}", exchange, new String(message));
-        getChannel().exchangeDeclare(exchange, BuiltinExchangeType.FANOUT, true); // 声明交换机
-        getChannel().basicPublish(exchange, "", null, message); // 发送消息
-    }
-
-
-    public  byte[] subscribeExchangeOne(String exchange, String queue ,BuiltinExchangeType type) throws IOException {
-        log.debug("Subscribing to FANOUT exchange: {}", exchange);
-        channel.exchangeDeclare(exchange, BuiltinExchangeType.FANOUT, true);
-        channel.queueBind(queue, exchange, "");
-        GetResponse resp = channel.basicGet(queue, true);
+    public byte[] receiveOne(String topic,String group ) throws IOException {
+        log.debug("Subscribing to FANOUT exchange: {}", topic);
+        channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true);
+        channel.queueBind(group, topic, "");
+        GetResponse resp = channel.basicGet(group, true);
         if (resp == null)
             return null;
         System.out.println("  📌 resp: " + resp.toString());
         return resp.getBody();
     }
+
+    @Override
+    public List<byte[]> receiveBatch(String topic,String group, int maxCount) throws IOException {
+        List<byte[]> list = new ArrayList<>();
+        for (int i = 0; i < maxCount; i++) {
+            byte[] msg = receiveOne(topic,group);
+            if (msg == null) break;
+            list.add(msg);
+        }
+        log.info("Received {} messages from {}", list.size(), topic);
+        return list;
+    }
+
+
 
     /**
      * 关闭资源
