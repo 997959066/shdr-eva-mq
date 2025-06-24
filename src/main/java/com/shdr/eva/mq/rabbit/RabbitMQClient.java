@@ -3,6 +3,7 @@ package com.shdr.eva.mq.rabbit;
 import com.rabbitmq.client.*;
 import com.shdr.eva.mq.MessageQueueClient;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.Assert;
 
 import java.io.IOException;
 import java.util.List;
@@ -59,12 +60,13 @@ public class RabbitMQClient implements MessageQueueClient {
     @Override
     public byte[] receiveOne(String topic,String group ) throws IOException {
         log.debug("Subscribing to FANOUT exchange: {}", topic);
+        Assert.notNull(topic, "'topic' cannot be null");
+        Assert.notNull(group, "'group' cannot be null");
         channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true);
         channel.queueBind(group, topic, "");
         GetResponse resp = channel.basicGet(group, true);
         if (resp == null)
             return null;
-        System.out.println("  📌 resp: " + resp.toString());
         return resp.getBody();
     }
 

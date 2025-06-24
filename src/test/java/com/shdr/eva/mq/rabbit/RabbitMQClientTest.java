@@ -30,13 +30,14 @@ public class RabbitMQClientTest {
     }
 
     @Test
-    @Order(100)
+    @Order(1)
     void testSendAndReceiveOne() throws Exception {
         // 🟡 先绑定一个临时队列（模拟订阅）
         String exchange = FANOUT_EXCHANGE;
         String queue = FANOUT_QUEUE;
         // 🟢 然后发布单条消息
         client.sendOne(exchange, "单条系统广播消息 Fanout Message".getBytes());
+
         // 🔵 然后消费单条消息
         byte[] msg = client.receiveOne(exchange, queue);
 
@@ -44,11 +45,14 @@ public class RabbitMQClientTest {
             System.out.println("No messages received");
             return;
         }
-        System.out.println("Received: " + new String(msg));
+        System.out.println("📌  Received: " + new String(msg));
 
     }
 
-
+    /**
+     * 多条发送
+     * @throws Exception
+     */
     @Test
     @Order(2)
     void testSendBatch() throws Exception {
@@ -66,6 +70,10 @@ public class RabbitMQClientTest {
     }
 
 
+    /**
+     * 多条接收
+     * @throws Exception
+     */
     @Test
     @Order(3)
     void testReceiveBatch() throws Exception {
@@ -80,39 +88,9 @@ public class RabbitMQClientTest {
             return;
         }
 
-        msgList.forEach(msg -> System.out.println("Received: " + new String(msg)));
+        msgList.forEach(msg -> System.out.println("📌 Received: " + new String(msg)));
 
     }
-
-
-//    @Test
-//    @Order(5)
-//    void testPublishSubscribeFanout() throws Exception {
-//        // 🟡 先绑定一个临时队列（模拟订阅）
-//        String topic = FANOUT_EXCHANGE;
-//        client.getChannel().exchangeDeclare(exchange, BuiltinExchangeType.FANOUT, true);
-//        client.getChannel().queueDeclare(FANOUT_QUEUE, true, false, false, null); // 自定义队列
-//        client.getChannel().queueBind(FANOUT_QUEUE, exchange, ""); // 绑定队列到 fanout 交换机
-//
-//        // 🟢 然后发布消息
-//        client.publishFanout(exchange, "Fanout Message".getBytes());
-//
-//        // 🔵 然后消费消息
-//        List<byte[]> msgs = new ArrayList<>();
-//        while (true) {
-//            GetResponse resp = client.getChannel().basicGet(FANOUT_QUEUE, true);
-//            if (resp == null) break;
-//            msgs.add(resp.getBody());
-//        }
-//
-//        // 输出
-//        for (byte[] msg : msgs) {
-//            System.out.println("Received: " + new String(msg));
-//        }
-//
-//        Assertions.assertFalse(msgs.isEmpty(), "Expected message in fanout queue");
-//    }
-
 
 }
 
