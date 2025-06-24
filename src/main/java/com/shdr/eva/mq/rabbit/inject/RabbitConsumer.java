@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RabbitConsumer {
 
-    @RabbitMQListener(topic = "test.fanout.queue", group = "test.fanout.exchange")
+    @RabbitMQListener(topic = "test.fanout.exchange", group = "test.fanout.queue")
     public void handleMessage(Message message) {
         System.out.println("✅ 收到消息: " + message.toString());
     }
