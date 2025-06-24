@@ -39,8 +39,6 @@ public class RabbitMQClientTest {
         String queue = FANOUT_QUEUE;
         // 🟢 然后发布单条消息
         client.sendOne(exchange, "单条系统广播消息 Fanout Message".getBytes());
-
-
     }
 
     /**
@@ -70,7 +68,7 @@ public class RabbitMQClientTest {
         MessageQueueClient rabbit = new RabbitMQClient();
 
         rabbit.onMessage(FANOUT_EXCHANGE, FANOUT_QUEUE, body -> {
-            System.out.println("📩 RabbitMQ 收到消息：" + JSON.toJSONString(body));
+            System.out.println("📩 RabbitMQ 收到消息：" + body.toString());
         });
         // 保持主线程存活
         Thread.currentThread().join();

@@ -60,7 +60,7 @@ public class RocketMQClientTest {
         MessageQueueClient rabbit = new RocketMQClient();
 
         rabbit.onMessage(TEST_TOPIC, TEST_GROUP, body -> {
-            System.out.println("📩 RabbitMQ 收到消息：" + JSON.toJSONString(body));
+            System.out.println("📩 RabbitMQ 收到消息：" + body.toString());
         });
         // 保持主线程存活
         Thread.currentThread().join();

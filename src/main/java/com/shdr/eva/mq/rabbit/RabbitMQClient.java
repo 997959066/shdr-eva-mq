@@ -9,6 +9,7 @@ import org.springframework.util.Assert;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
@@ -46,9 +47,12 @@ public class RabbitMQClient implements MessageQueueClient {
 
     @Override
     public void sendOne(String topic, byte[] message) throws IOException {
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
+                .messageId(UUID.randomUUID().toString())
+                .build();
         log.info("Publishing to exchange={}payload={}", topic, new String(message));
         getChannel().exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
-        getChannel().basicPublish(topic, "", null, message); // 发送消息
+        getChannel().basicPublish(topic, "", props, message); // 发送消息
     }
 
     @Override
@@ -107,6 +111,14 @@ public class RabbitMQClient implements MessageQueueClient {
     }
 
 
+    /**
+     * RabbitMQ 默认没有消息 ID（Message ID）
+     * 如果你想要 消息ID，需要在发送消息时显式设置 messageId
+     * @param topic
+     * @param group
+     * @param callback
+     * @throws Exception
+     */
     @Override
     public void onMessage(String topic, String group, Consumer<Message> callback) throws Exception {
         // 声明 fanout 类型交换机

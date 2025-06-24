@@ -1,6 +1,7 @@
 package com.shdr.eva.mq.common;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 public  class Message implements Serializable {
 
@@ -46,5 +47,15 @@ public  class Message implements Serializable {
 
     public void setTraceId(String traceId) {
         this.traceId = traceId;
+    }
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "topic='" + topic + '\'' +
+                ", group='" + group + '\'' +
+                ", msgBody=" + new String(msgBody) +
+                ", traceId='" + traceId + '\'' +
+                '}';
     }
 }
