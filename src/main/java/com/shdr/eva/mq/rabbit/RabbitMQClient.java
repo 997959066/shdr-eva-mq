@@ -4,6 +4,9 @@ import com.rabbitmq.client.*;
 import com.shdr.eva.mq.MessageQueueClient;
 import com.shdr.eva.mq.common.Message;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
@@ -16,6 +19,7 @@ import java.util.function.Consumer;
 /**
  * RabbitMQ 实现，支持基础发送接收、topic与fanout发布订阅、批量与缓存发送
  */
+@Component
 @Slf4j
 public class RabbitMQClient implements MessageQueueClient {
     private Connection connection; // 与 RabbitMQ 的连接对象

@@ -31,11 +31,6 @@ public class RocketMQClientTest {
         client = new RocketMQClient();
     }
 
-    @AfterAll
-    public static void tearDown() {
-        // RocketMQ producer 无需关闭（可选）
-    }
-
     @Test
     public void testSendOne() throws Exception {
         String message = " RocketMQ 发送单条广播消息!";
@@ -47,9 +42,9 @@ public class RocketMQClientTest {
     @Test
     public void testSendBatch() throws Exception {
         List<byte[]> messages = Arrays.asList(
-                "SendBatch msg1".getBytes(),
-                "SendBatch msg2".getBytes(),
-                "SendBatch msg3".getBytes()
+                "Rocket SendBatch msg1".getBytes(),
+                "Rocket SendBatch msg2".getBytes(),
+                "Rocket SendBatch msg3".getBytes()
         );
         client.sendBatch(TEST_TOPIC, messages);
     }
@@ -60,7 +55,7 @@ public class RocketMQClientTest {
         MessageQueueClient rabbit = new RocketMQClient();
 
         rabbit.onMessage(TEST_TOPIC, TEST_GROUP, body -> {
-            System.out.println("📩 RabbitMQ 收到消息：" + body.toString());
+            System.out.println("Rocket RabbitMQ 收到消息：" + body.toString());
         });
         // 保持主线程存活
         Thread.currentThread().join();
@@ -74,10 +69,10 @@ public class RocketMQClientTest {
         byte[] msg = client.receiveOne(TEST_TOPIC, "*");
 
         if (msg == null) {
-            System.out.println("No messages received");
+            System.out.println("Rocket No messages received");
             return;
         }
-        System.out.println("Received: " + new String(msg));
+        System.out.println("Rocket Received: " + new String(msg));
     }
 
 
@@ -87,11 +82,11 @@ public class RocketMQClientTest {
 
 
         if (msgList.isEmpty()) {
-            System.out.println("No messages received");
+            System.out.println("Rocket No messages received");
             return;
         }
 
-        msgList.forEach(msg -> System.out.println("Received: " + new String(msg)));
+        msgList.forEach(msg -> System.out.println("Rocket Received: " + new String(msg)));
     }
 
 }
