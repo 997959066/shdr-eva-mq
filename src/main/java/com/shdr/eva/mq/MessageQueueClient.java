@@ -38,16 +38,6 @@ public interface MessageQueueClient {
      */
     List<byte[]> receiveBatch(String exchange,String queue, int maxCount) throws Exception;
 
-    /**
-     * 暂存单条消息，不立即发送
-     * @param exchange 目标队列名称
-     * @param message 待缓存的消息内容
-     */
-    void storeMessage(String exchange, byte[] message);
-    /**
-     * 发送所有已缓存的消息
-     * @throws Exception 如果发送失败抛出异常
-     */
-    void sendStoredMessages() throws Exception;
+
 
 }

@@ -16,18 +16,6 @@ import java.util.concurrent.TimeoutException;
 public class RabbitMQClient implements MessageQueueClient {
     private Connection connection; // 与 RabbitMQ 的连接对象
     private Channel channel;       // 通信信道
-    private List<PendingMessage> buffer = new ArrayList<>(); // 消息缓存列表
-
-    // 内部类：用于缓存发送失败的消息
-    private static class PendingMessage {
-        String destination;
-        byte[] message;
-
-        PendingMessage(String destination, byte[] message) {
-            this.destination = destination;
-            this.message = message;
-        }
-    }
 
     /**
      * 构造函数：通过明确定义参数的方式连接 RabbitMQ（适用于 localhost 环境）
@@ -53,6 +41,9 @@ public class RabbitMQClient implements MessageQueueClient {
         return this.channel;
     }
 
+
+
+
     @Override
     public void sendOne(String exchange, byte[] message) throws IOException {
         publishFanout(exchange, message);
@@ -65,20 +56,6 @@ public class RabbitMQClient implements MessageQueueClient {
         }
     }
 
-    @Override
-    public void storeMessage(String exchange, byte[] message) {
-        log.info("Storing message for {}: {}", exchange, new String(message));
-        buffer.add(new PendingMessage(exchange, message)); // 加入缓存队列
-    }
-
-    @Override
-    public void sendStoredMessages() throws IOException {
-//        for (PendingMessage pm : buffer) {
-//            sendOne(pm.destination, pm.message); // 批量重发
-//        }
-        log.info("Sent {} stored messages.", buffer.size());
-        buffer.clear(); // 清空缓存
-    }
 
     @Override
     public byte[] receiveOne(String exchange,String queue ) throws IOException {
@@ -116,6 +93,7 @@ public class RabbitMQClient implements MessageQueueClient {
         GetResponse resp = channel.basicGet(queue, true);
         if (resp == null)
             return null;
+        System.out.println("  📌 resp: " + resp.toString());
         return resp.getBody();
     }
 

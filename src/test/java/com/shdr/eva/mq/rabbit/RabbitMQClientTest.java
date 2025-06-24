@@ -1,7 +1,5 @@
 package com.shdr.eva.mq.rabbit;
 
-import com.rabbitmq.client.BuiltinExchangeType;
-import com.rabbitmq.client.GetResponse;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
