@@ -12,64 +12,60 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.IntStream;
 
 /**
  * RabbitMQClient 单元测试类
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class RabbitMQClientTest {
-
-
-
     private static RabbitMQClient client;
-    private static final String FANOUT_QUEUE = "test.fanout.queue";
-    private static final String FANOUT_EXCHANGE = "test.fanout.exchange";
+
+    private static final String TOPIC = "test.fanout.exchange";
 
     @BeforeAll
     static void setup() throws IOException, TimeoutException {
         client = new RabbitMQClient();
     }
-
     @AfterAll
     static void teardown() throws IOException, TimeoutException {
         client.close();
     }
 
+    //单条消息
     @Test
     @Order(1)
-    void testSendAndReceiveOne()  {
-        client.sendOne(FANOUT_EXCHANGE, "RabbitMQ 单条系统广播消息 Fanout Message".getBytes());
+    void testSendOne()  {
+        String msg = "RabbitMQ 单条广播消息";
+        client.sendOne(TOPIC, msg.getBytes());
     }
 
-    /**
-     * 多条发送
-     * @throws Exception
-     */
+    //多条发送
     @Test
     @Order(2)
-    void testSendBatch() throws Exception {
+    void testSendBatch(){
         List<byte[]> messages = new ArrayList<>();
-        for (int i = 1; i <= 10; i++) {
-            String s = i + "_RabbitMQ__系统广播消息 Fanout Message";
-            messages.add(s.getBytes());
-        }
-        client.sendBatch(FANOUT_EXCHANGE, messages);
+        IntStream.range(1, 10).forEach(i -> {
+            String msg = "RabbitMQ 第 "+ i + "条广播消息";
+            messages.add(msg.getBytes());
+        });
+        client.sendBatch(TOPIC, messages);
     }
 
+
+    private static final String FANOUT_QUEUE = "test.fanout.queue";
 
     @Test
     @Order(4)
     void onMessage() throws Exception {
         MessageQueueClient rabbit = new RabbitMQClient();
 
-        rabbit.onMessage(FANOUT_EXCHANGE, FANOUT_QUEUE, body -> {
+        rabbit.onMessage(TOPIC, FANOUT_QUEUE, body -> {
             System.out.println("RabbitMQ 收到消息：" + body.toString());
         });
         // 保持主线程存活
         Thread.currentThread().join();
-
     }
-
 
 
     /**
@@ -79,7 +75,7 @@ public class RabbitMQClientTest {
     @Test
     @Order(3)
     void testReceiveBatch() throws Exception {
-        String exchange = FANOUT_EXCHANGE;
+        String exchange = TOPIC;
         String queue = FANOUT_QUEUE;
 
         // 🔵 然后消费多条消息

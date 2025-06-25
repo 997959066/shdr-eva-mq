@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 /**
  * RabbitMQClient 单元测试类
@@ -23,38 +24,40 @@ import java.util.List;
 public class RocketMQClientTest {
 
     private static RocketMQClient client;
-    private static final String TEST_TOPIC = "testTopic";
-    private static final String TEST_GROUP = "testGroup";
+    private static final String TOPIC = "testTopic";
 
     @BeforeAll
     public static void setup() throws Exception {
         client = new RocketMQClient();
     }
 
+
     @Test
     public void testSendOne() throws Exception {
-        String message = " RocketMQ 发送单条广播消息!";
-        client.sendOne(TEST_TOPIC, message.getBytes());
+        String msg = "RocketMQ 单条广播消息";
+        client.sendOne(TOPIC, msg.getBytes());
     }
-
 
 
     @Test
-    public void testSendBatch() throws Exception {
-        List<byte[]> messages = Arrays.asList(
-                "Rocket SendBatch msg1".getBytes(),
-                "Rocket SendBatch msg2".getBytes(),
-                "Rocket SendBatch msg3".getBytes()
-        );
-        client.sendBatch(TEST_TOPIC, messages);
+    public void testSendBatch(){
+        List<byte[]> messages = IntStream.range(1, 10)
+                .mapToObj(i -> ("RocketMQ 第 " + i + " 条广播消息").getBytes())
+                .toList();
+        client.sendBatch(TOPIC, messages);
     }
 
+
+
+
+
+    private static final String TEST_GROUP = "testGroup";
     @Test
     @Order(4)
     void onMessage() throws Exception {
         MessageQueueClient rabbit = new RocketMQClient();
 
-        rabbit.onMessage(TEST_TOPIC, TEST_GROUP, body -> {
+        rabbit.onMessage(TOPIC, TEST_GROUP, body -> {
             System.out.println("Rocket RabbitMQ 收到消息：" + body.toString());
         });
         // 保持主线程存活
@@ -66,7 +69,7 @@ public class RocketMQClientTest {
     // 拉取消息
     @Test
     public void testReceiveOne() throws Exception {
-        byte[] msg = client.receiveOne(TEST_TOPIC, "*");
+        byte[] msg = client.receiveOne(TOPIC, "*");
 
         if (msg == null) {
             System.out.println("Rocket No messages received");
@@ -78,7 +81,7 @@ public class RocketMQClientTest {
 
     @Test
     public void testReceiveBatch() throws Exception {
-        List<byte[]> msgList = client.receiveBatch(TEST_TOPIC, TEST_GROUP,10);
+        List<byte[]> msgList = client.receiveBatch(TOPIC, TEST_GROUP,10);
 
 
         if (msgList.isEmpty()) {

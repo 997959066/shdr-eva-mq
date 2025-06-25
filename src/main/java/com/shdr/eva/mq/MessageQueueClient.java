@@ -20,7 +20,7 @@ public interface MessageQueueClient {
      * 批量发送多条消息到指定topic
      * @param topic 主题
      * @param messages 消息列表（字节数组）
-     * @throws Exception 发送失败时抛出异常
+     * 当前批次的traceId相同
      */
     void sendBatch(String topic, List<byte[]> messages) ;
 

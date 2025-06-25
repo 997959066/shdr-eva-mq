@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 
 /**
  * RabbitMQ 实现，支持基础发送接收、topic与fanout发布订阅、批量与缓存发送
+ * RabbitMQ
  */
 @Component
 @Slf4j
@@ -51,8 +52,10 @@ public class RabbitMQClient implements MessageQueueClient {
 
     /**
      * rabbitmq fanout 模式 忽略路由key
-     * @param topic 主题
+     *
+     * @param topic   主题
      * @param message 消息内容（字节数组）
+     *                RabbitMQ需要开启 Confirm 模式，才有返回。
      */
     @Override
     public void sendOne(String topic, byte[] message) {
@@ -67,16 +70,29 @@ public class RabbitMQClient implements MessageQueueClient {
         }
     }
 
+    /**
+     * rabbitmq自身不支持批量，需要手动实现
+     *
+     * @param topic    主题
+     * @param messages 消息列表（字节数组）
+     */
     @Override
-    public void sendBatch(String topic, List<byte[]> messages)  {
-        for (byte[] msg : messages) {
-            sendOne(topic, msg); // 逐条发送
+    public void sendBatch(String topic, List<byte[]> messages) {
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
+                .messageId(UUID.randomUUID().toString()).build();
+        try {
+            getChannel().exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
+            for (byte[] msg : messages) {
+                getChannel().basicPublish(topic, "", props, msg); // 发送消息
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
 
     @Override
-    public byte[] receiveOne(String topic,String group ) throws IOException {
+    public byte[] receiveOne(String topic, String group) throws IOException {
         log.debug("Subscribing to FANOUT exchange: {}", topic);
         Assert.notNull(topic, "'topic' cannot be null");
         Assert.notNull(group, "'group' cannot be null");
@@ -89,17 +105,16 @@ public class RabbitMQClient implements MessageQueueClient {
     }
 
     @Override
-    public List<byte[]> receiveBatch(String topic,String group, int maxCount) throws IOException {
+    public List<byte[]> receiveBatch(String topic, String group, int maxCount) throws IOException {
         List<byte[]> list = new ArrayList<>();
         for (int i = 0; i < maxCount; i++) {
-            byte[] msg = receiveOne(topic,group);
+            byte[] msg = receiveOne(topic, group);
             if (msg == null) break;
             list.add(msg);
         }
         log.info("Received {} messages from {}", list.size(), topic);
         return list;
     }
-
 
 
     /**
@@ -126,6 +141,7 @@ public class RabbitMQClient implements MessageQueueClient {
     /**
      * RabbitMQ 默认没有消息 ID（Message ID）
      * 如果你想要 消息ID，需要在发送消息时显式设置 messageId
+     *
      * @param topic
      * @param group
      * @param callback

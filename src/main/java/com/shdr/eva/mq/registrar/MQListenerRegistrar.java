@@ -47,6 +47,7 @@ public class MQListenerRegistrar implements BeanPostProcessor {
                 } catch (Exception e) {
                     throw new RuntimeException("MQ监听注册失败", e);
                 }
+                System.out.printf("✅ RabbitMQ Consumer started: topic=%s, group=%s\n", topic, group);
             }
         }
         return bean;

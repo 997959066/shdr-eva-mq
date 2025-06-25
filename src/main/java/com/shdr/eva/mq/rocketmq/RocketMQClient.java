@@ -9,6 +9,7 @@ import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
+import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.protocol.heartbeat.MessageModel;
@@ -46,7 +47,8 @@ public class RocketMQClient implements MessageQueueClient {
         Message msg = new Message(topic, "TagA", message);
         try {
             producer.start();
-            producer.send(msg);
+            SendResult result = producer.send(msg);
+            System.out.println("🚀 RocketMQ单条发送结果：" + result);
         } catch (MQClientException e) {
             throw new RuntimeException(e);
         } catch (RemotingException e) {
@@ -61,8 +63,25 @@ public class RocketMQClient implements MessageQueueClient {
 
     @Override
     public void sendBatch(String topic, List<byte[]> messages) {
-        for (byte[] msg : messages) {
-            sendOne(topic, msg); // 逐条发送
+        DefaultMQProducer producer = new DefaultMQProducer("rocketmq-producer-group");
+        producer.setNamesrvAddr(namesrvAddr);
+
+        try {
+            producer.start();
+
+            List<Message> messageList = new ArrayList<>();
+            messages.forEach(message -> {
+                messageList.add(new Message(topic, "TagA", message));
+            });
+            // 发送批量消息
+            SendResult result = producer.send(messageList);
+
+            System.out.println("🚀 RocketMQ批量发送结果：" + result);
+
+        } catch (Exception e) {
+            throw new RuntimeException("发送失败", e);
+        } finally {
+            producer.shutdown();
         }
     }
 
