@@ -24,11 +24,9 @@ public class RabbitProducer {
 
     //多条发送
     public void sendBatch() {
-        List<byte[]> messages = new ArrayList<>();
-        IntStream.range(1, 10).forEach(i -> {
-            String msg = "RabbitMQ 第 "+ i + "条广播消息";
-            messages.add(msg.getBytes());
-        });
+        List<byte[]> messages = IntStream.range(1, 10)
+                .mapToObj(i -> ("RabbitMQ 第 " + i + " 条广播消息").getBytes())
+                .toList();
         rabbitMQClient.sendBatch(TOPIC, messages);
     }
 }
