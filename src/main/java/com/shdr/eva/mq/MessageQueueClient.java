@@ -14,7 +14,7 @@ public interface MessageQueueClient {
      * @param message 消息内容（字节数组）
      * @throws Exception 发送失败时抛出异常
      */
-    void sendOne(String topic, byte[] message) throws Exception;
+    void sendOne(String topic, byte[] message) ;
 
     /**
      * 批量发送多条消息到指定topic
@@ -22,7 +22,7 @@ public interface MessageQueueClient {
      * @param messages 消息列表（字节数组）
      * @throws Exception 发送失败时抛出异常
      */
-    void sendBatch(String topic, List<byte[]> messages) throws Exception;
+    void sendBatch(String topic, List<byte[]> messages) ;
 
     /**
      * 消息持续监听

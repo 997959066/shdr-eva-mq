@@ -12,7 +12,7 @@ public class RabbitConsumer {
 
     @RabbitMQListener(topic = "test.fanout.exchange", group = "test.fanout.queue")
     public void handleMessage(Message message) {
-        System.out.println("✅ 收到消息: " + message.toString());
+        System.out.println("✅ [RabbitMQ] 收到消息:" + message.toString());
     }
 }
 

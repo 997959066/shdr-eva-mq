@@ -1,25 +1,24 @@
-package com.shdr.eva.mq.rabbit;
+package com.shdr.eva.mq.rocketmq;
 
 import com.shdr.eva.mq.rabbit.inject.RabbitProducer;
+import com.shdr.eva.mq.rocketmq.inject.RocketProducer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.nio.charset.StandardCharsets;
-
 @SpringBootTest
-class RabbitmqTest {
+class RocketmqTest {
 
     @Autowired
-    private RabbitProducer rabbitProducer;
+    private RocketProducer rocketProducer;
 
     @Test
     void sendOne() {
-        rabbitProducer.sendOne();
+        rocketProducer.sendOne();
     }
 
     @Test
     void sendBatch() {
-        rabbitProducer.sendBatch();
+        rocketProducer.sendBatch();
     }
 }

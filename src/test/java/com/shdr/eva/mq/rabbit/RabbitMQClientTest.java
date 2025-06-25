@@ -2,7 +2,10 @@ package com.shdr.eva.mq.rabbit;
 
 import com.alibaba.fastjson.JSON;
 import com.shdr.eva.mq.MessageQueueClient;
+import com.shdr.eva.mq.rabbit.inject.RabbitProducer;
 import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,6 +18,8 @@ import java.util.concurrent.TimeoutException;
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class RabbitMQClientTest {
+
+
 
     private static RabbitMQClient client;
     private static final String FANOUT_QUEUE = "test.fanout.queue";
@@ -32,7 +37,7 @@ public class RabbitMQClientTest {
 
     @Test
     @Order(1)
-    void testSendAndReceiveOne() throws Exception {
+    void testSendAndReceiveOne()  {
         client.sendOne(FANOUT_EXCHANGE, "RabbitMQ 单条系统广播消息 Fanout Message".getBytes());
     }
 

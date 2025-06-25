@@ -3,6 +3,8 @@ package com.shdr.eva.mq.rocketmq;
 
 import com.shdr.eva.mq.MessageQueueClient;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.client.exception.MQBrokerException;
+import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
@@ -10,6 +12,7 @@ import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.protocol.heartbeat.MessageModel;
+import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -35,20 +38,29 @@ public class RocketMQClient implements MessageQueueClient {
     }
 
     @Override
-    public void sendOne(String topic, byte[] message) throws Exception {
+    public void sendOne(String topic, byte[] message) {
         //组只是逻辑分组名，不影响广播行为➤ 可以固定一个名字，也可以多个生产者共享，不影响广播
         DefaultMQProducer producer = new DefaultMQProducer("rocketmq-producer-group");
         producer.setNamesrvAddr(namesrvAddr);
-        producer.start();
 
         Message msg = new Message(topic, "TagA", message);
-        producer.send(msg);
-        System.out.println(msg.toString());
+        try {
+            producer.start();
+            producer.send(msg);
+        } catch (MQClientException e) {
+            throw new RuntimeException(e);
+        } catch (RemotingException e) {
+            throw new RuntimeException(e);
+        } catch (MQBrokerException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         producer.shutdown();
     }
 
     @Override
-    public void sendBatch(String topic, List<byte[]> messages) throws Exception {
+    public void sendBatch(String topic, List<byte[]> messages) {
         for (byte[] msg : messages) {
             sendOne(topic, msg); // 逐条发送
         }

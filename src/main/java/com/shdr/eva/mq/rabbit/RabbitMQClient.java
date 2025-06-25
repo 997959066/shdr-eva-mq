@@ -49,18 +49,26 @@ public class RabbitMQClient implements MessageQueueClient {
         return this.channel;
     }
 
+    /**
+     * rabbitmq fanout 模式 忽略路由key
+     * @param topic 主题
+     * @param message 消息内容（字节数组）
+     */
     @Override
-    public void sendOne(String topic, byte[] message) throws IOException {
+    public void sendOne(String topic, byte[] message) {
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
-                .messageId(UUID.randomUUID().toString())
-                .build();
+                .messageId(UUID.randomUUID().toString()).build();
         log.info("Publishing to exchange={}payload={}", topic, new String(message));
-        getChannel().exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
-        getChannel().basicPublish(topic, "", props, message); // 发送消息
+        try {
+            getChannel().exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
+            getChannel().basicPublish(topic, "", props, message); // 发送消息
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
-    public void sendBatch(String topic, List<byte[]> messages) throws IOException {
+    public void sendBatch(String topic, List<byte[]> messages)  {
         for (byte[] msg : messages) {
             sendOne(topic, msg); // 逐条发送
         }
