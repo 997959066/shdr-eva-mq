@@ -59,9 +59,10 @@ public class RabbitMQClient implements MessageQueueClient {
      */
     @Override
     public void sendOne(String topic, byte[] message) {
+        String msgId = UUID.randomUUID().toString();
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
-                .messageId(UUID.randomUUID().toString()).build();
-        log.info("Publishing to exchange={}payload={}", topic, new String(message));
+                .messageId(msgId).build();
+        log.info("Publishing to traceId={} exchange={} payload={}",msgId, topic, new String(message));
         try {
             getChannel().exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
             getChannel().basicPublish(topic, "", props, message); // 发送消息
@@ -78,8 +79,10 @@ public class RabbitMQClient implements MessageQueueClient {
      */
     @Override
     public void sendBatch(String topic, List<byte[]> messages) {
+        String msgId = UUID.randomUUID().toString();
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
-                .messageId(UUID.randomUUID().toString()).build();
+                .messageId(msgId).build();
+        log.info("sendBatch : traceId={} exchange={}",msgId, topic);
         try {
             getChannel().exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
             for (byte[] msg : messages) {
