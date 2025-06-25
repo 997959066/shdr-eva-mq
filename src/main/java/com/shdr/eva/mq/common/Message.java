@@ -1,53 +1,31 @@
 package com.shdr.eva.mq.common;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.io.Serializable;
 import java.util.Arrays;
-
+import java.util.Date;
+@Getter
+@Setter
 public  class Message implements Serializable {
 
     private String topic;
     private String group;
     private byte[] msgBody;
-    private String traceId;
+    private String messageId;
 
-    public Message(String topic, String group, byte[] msgBody, String traceId) {
+    private Date sendTime;
+    private Date receiveTime;
+
+    public Message(String topic, String group, byte[] msgBody, String messageId) {
         this.topic = topic;
         this.group = group;
         this.msgBody = msgBody;
-        this.traceId = traceId;
+        this.messageId = messageId;
     }
 
-    public String getTopic() {
-        return topic;
-    }
 
-    public void setTopic(String topic) {
-        this.topic = topic;
-    }
-
-    public String getGroup() {
-        return group;
-    }
-
-    public void setGroup(String group) {
-        this.group = group;
-    }
-
-    public byte[] getMsgBody() {
-        return msgBody;
-    }
-
-    public void setMsgBody(byte[] msgBody) {
-        this.msgBody = msgBody;
-    }
-
-    public String getTraceId() {
-        return traceId;
-    }
-
-    public void setTraceId(String traceId) {
-        this.traceId = traceId;
-    }
 
     @Override
     public String toString() {
@@ -55,7 +33,7 @@ public  class Message implements Serializable {
                 "topic='" + topic + '\'' +
                 ", group='" + group + '\'' +
                 ", msgBody=" + new String(msgBody) +
-                ", traceId='" + traceId + '\'' +
+                ", messageId='" + messageId + '\'' +
                 '}';
     }
 }

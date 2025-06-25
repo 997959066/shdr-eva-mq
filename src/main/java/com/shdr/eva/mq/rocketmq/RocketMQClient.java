@@ -178,7 +178,7 @@ public class RocketMQClient implements MessageQueueClient {
 
         consumer.registerMessageListener((MessageListenerConcurrently) (msgs, context) -> {
             for (MessageExt msg : msgs) {
-                com.shdr.eva.mq.common.Message message = new com.shdr.eva.mq.common.Message(topic, group, msg.getBody(), msg.getMsgId()); // traceId暂时传null或从消息属性获取
+                com.shdr.eva.mq.common.Message message = new com.shdr.eva.mq.common.Message(topic, group, msg.getBody(), msg.getMsgId()); // messageId暂时传null或从消息属性获取
                 callback.accept(message);
             }
             return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;

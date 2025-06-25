@@ -62,7 +62,7 @@ public class RabbitMQClient implements MessageQueueClient {
         String msgId = UUID.randomUUID().toString();
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
                 .messageId(msgId).build();
-        log.info("Publishing to traceId={} exchange={} payload={}",msgId, topic, new String(message));
+        log.info("Publishing to messageId={} exchange={} payload={}",msgId, topic, new String(message));
         try {
             getChannel().exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
             getChannel().basicPublish(topic, "", props, message); // 发送消息
@@ -82,7 +82,7 @@ public class RabbitMQClient implements MessageQueueClient {
         String msgId = UUID.randomUUID().toString();
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
                 .messageId(msgId).build();
-        log.info("sendBatch : traceId={} exchange={}",msgId, topic);
+        log.info("sendBatch : messageId={} exchange={}",msgId, topic);
         try {
             getChannel().exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
             for (byte[] msg : messages) {
@@ -164,7 +164,7 @@ public class RabbitMQClient implements MessageQueueClient {
             byte[] body = delivery.getBody();
             String messageId = delivery.getProperties().getMessageId();
             // 构造自定义 Message 对象
-            Message msg = new Message(topic, group, body, messageId); // traceId暂时传null或从消息属性获取
+            Message msg = new Message(topic, group, body, messageId); // messageId暂时传null或从消息属性获取
 //            log.info("📨 Received message from RabbitMQ: {}", new String(body));
             callback.accept(msg);
         };
