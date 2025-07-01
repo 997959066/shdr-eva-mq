@@ -1,7 +1,6 @@
 package com.shdr.eva.mq;
 
 import com.shdr.eva.mq.common.Message;
-import com.shdr.eva.mq.common.MessagePayload;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -11,23 +10,24 @@ public interface MessageClient {
 
     /**
      * 发送单条消息
-     * @param messagePayload
+     * @param message
      */
-    void sendOne(MessagePayload messagePayload) ;
+    void sendOne(Message message) ;
 
     /**
      * 批量发送条消息
-     * @param messagePayload
+     * @param messageList
      */
-    void sendBatch(MessagePayload messagePayload) ;
+    void sendBatch(List<Message> messageList) ;
 
     /**
      * 消息监听
-     * @param messagePayload
+     * @param topic
+     * @param group
      * @param callback
-     * @throws Exception
      */
-    void onMessage(MessagePayload messagePayload, Consumer<MessagePayload> callback);
+    void onMessage(String topic,String group,Consumer<Message> callback);
+
 
 
 }

@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.rabbitmq.client.*;
 import com.shdr.eva.mq.MessageClient;
 import com.shdr.eva.mq.common.Message;
-import com.shdr.eva.mq.common.MessagePayload;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -49,10 +48,11 @@ public class RabbitMQV2Client implements MessageClient {
      *                RabbitMQ需要开启 Confirm 模式，才有返回。
      */
     @Override
-    public void sendOne(MessagePayload message) {
-        String msgId = UUID.randomUUID().toString();
+    public void sendOne(Message message) {
         String topic = message.getTopic();
-        String msgBody = message.getMsgBody();
+        String msgId = UUID.randomUUID().toString();
+        Object body = message.getBody();
+        String msgBody = JSON.toJSONString(body);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().messageId(msgId).build();
         log.info("sendOne Publishing to message={} ", JSON.toJSONString(message));
         try {
@@ -65,27 +65,69 @@ public class RabbitMQV2Client implements MessageClient {
 
     /**
      * rabbitmq自身不支持批量，需要手动实现
-     *
-     *             [{},{}]
+     * <p>
+     * [{},{}]
      */
-
     @Override
-    public void sendBatch(MessagePayload message) {
-        String msgId = UUID.randomUUID().toString();
-        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
-                .messageId(msgId).build();
-        String topic = message.getTopic();
-        log.info("sendBatch Publishing to message={} ", JSON.toJSONString(message));
-        List<String> msgListBody = message.getMsgListBody();
+    public void sendBatch(List<Message> messageList) {
         try {
-            channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
-            for (String msg : msgListBody) {
-                channel.basicPublish(topic, "", props, msg.getBytes()); // 发送消息
+            for (Message message : messageList) {
+                String topic = message.getTopic();
+                String msgId = UUID.randomUUID().toString();
+                Object body = message.getBody();
+                String msgBody = JSON.toJSONString(body);
+                AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
+                        .messageId(msgId).build();
+                channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
+                channel.basicPublish(topic, "", props, msgBody.getBytes()); // 发送消息
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
+
+
+
+
+    /**
+     * RabbitMQ 默认没有消息 ID（Message ID）
+     * 如果你想要 消息ID，需要在发送消息时显式设置 messageId
+     *
+     * @param topic
+     * @param group
+     * @param callback
+     * @throws Exception
+     */
+    @Override
+    public void onMessage(String topic,String group, Consumer<Message> callback) {
+        // 声明 fanout 类型交换机
+        try {
+            channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true);
+            // 声明并绑定队列（这里 queue 就是 group）
+            channel.queueDeclare(group, true, false, false, null);
+            channel.queueBind(group, topic, "");
+            // 定义消费者
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                byte[] body = delivery.getBody();
+                String messageId = delivery.getProperties().getMessageId();
+                // 构造自定义 Message 对象
+                Message msg = new Message(topic,group,new String(body), messageId); // messageId暂时传null或从消息属性获取
+//            log.info("📨 Received message from RabbitMQ: {}", new String(body));
+                callback.accept(msg);
+            };
+            // 开始消费
+            channel.basicConsume(group, true, deliverCallback, consumerTag -> {
+                log.warn("❌ Consumer cancelled: {}", consumerTag);
+            });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+
+
+
 
 
 
@@ -107,45 +149,6 @@ public class RabbitMQV2Client implements MessageClient {
                 connection.close();
             } catch (Exception ignored) {
             }
-        }
-    }
-
-
-    /**
-     * RabbitMQ 默认没有消息 ID（Message ID）
-     * 如果你想要 消息ID，需要在发送消息时显式设置 messageId
-     *
-     * @param topic
-     * @param group
-     * @param callback
-     * @throws Exception
-     */
-    @Override
-    public void onMessage(MessagePayload messagePayload, Consumer<MessagePayload> callback) {
-        String topic = messagePayload.getTopic();
-        String group = messagePayload.getGroup();
-        // 声明 fanout 类型交换机
-        try {
-            channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true);
-            // 声明并绑定队列（这里 queue 就是 group）
-            channel.queueDeclare(group, true, false, false, null);
-            channel.queueBind(group, topic, "");
-            // 定义消费者
-            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                byte[] body = delivery.getBody();
-                String messageId = delivery.getProperties().getMessageId();
-                // 构造自定义 Message 对象
-                MessagePayload msg = new MessagePayload(topic, group, new  String(body), messageId); // messageId暂时传null或从消息属性获取
-//            log.info("📨 Received message from RabbitMQ: {}", new String(body));
-                callback.accept(msg);
-            };
-
-            // 开始消费
-            channel.basicConsume(group, true, deliverCallback, consumerTag -> {
-                log.warn("❌ Consumer cancelled: {}", consumerTag);
-            });
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 

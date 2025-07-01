@@ -2,6 +2,7 @@ package com.shdr.eva.mq.rocketmq;
 
 
 import com.shdr.eva.mq.MessageQueueClient;
+import com.shdr.eva.mq.common.MessageOne;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
@@ -170,7 +171,7 @@ public class RocketMQClient implements MessageQueueClient {
     }
 
     @Override
-    public void onMessage(String topic, String group, Consumer<com.shdr.eva.mq.common.Message> callback) throws Exception {
+    public void onMessage(String topic, String group, Consumer<MessageOne> callback) throws Exception {
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(group);
         consumer.setNamesrvAddr(namesrvAddr);
         consumer.subscribe(topic, "*");
@@ -178,8 +179,8 @@ public class RocketMQClient implements MessageQueueClient {
 
         consumer.registerMessageListener((MessageListenerConcurrently) (msgs, context) -> {
             for (MessageExt msg : msgs) {
-                com.shdr.eva.mq.common.Message message = new com.shdr.eva.mq.common.Message(topic, group, msg.getBody(), msg.getMsgId()); // messageId暂时传null或从消息属性获取
-                callback.accept(message);
+                MessageOne messageOne = new MessageOne(topic, group, msg.getBody(), msg.getMsgId()); // messageId暂时传null或从消息属性获取
+                callback.accept(messageOne);
             }
             return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
         });

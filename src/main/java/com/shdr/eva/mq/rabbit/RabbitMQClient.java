@@ -2,10 +2,8 @@ package com.shdr.eva.mq.rabbit;
 
 import com.rabbitmq.client.*;
 import com.shdr.eva.mq.MessageQueueClient;
-import com.shdr.eva.mq.common.Message;
+import com.shdr.eva.mq.common.MessageOne;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -151,7 +149,7 @@ public class RabbitMQClient implements MessageQueueClient {
      * @throws Exception
      */
     @Override
-    public void onMessage(String topic, String group, Consumer<Message> callback) throws Exception {
+    public void onMessage(String topic, String group, Consumer<MessageOne> callback) throws Exception {
         // 声明 fanout 类型交换机
         channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true);
 
@@ -164,7 +162,7 @@ public class RabbitMQClient implements MessageQueueClient {
             byte[] body = delivery.getBody();
             String messageId = delivery.getProperties().getMessageId();
             // 构造自定义 Message 对象
-            Message msg = new Message(topic, group, body, messageId); // messageId暂时传null或从消息属性获取
+            MessageOne msg = new MessageOne(topic, group, body, messageId); // messageId暂时传null或从消息属性获取
 //            log.info("📨 Received message from RabbitMQ: {}", new String(body));
             callback.accept(msg);
         };

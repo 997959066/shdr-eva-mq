@@ -1,6 +1,6 @@
 package com.shdr.eva.mq;
 
-import com.shdr.eva.mq.common.Message;
+import com.shdr.eva.mq.common.MessageOne;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -31,7 +31,7 @@ public interface MessageQueueClient {
      * @param callback
      * @throws Exception
      */
-    void onMessage(String topic, String group, Consumer<Message> callback) throws Exception;
+    void onMessage(String topic, String group, Consumer<MessageOne> callback) throws Exception;
 
     /**
      * 从指定队列拉取一条消息

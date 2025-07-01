@@ -2,7 +2,7 @@ package com.shdr.eva.mq.registrar;
 
 
 import com.shdr.eva.mq.annotation.RocketMQListener;
-import com.shdr.eva.mq.common.Message;
+import com.shdr.eva.mq.common.MessageOne;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
@@ -51,7 +51,7 @@ public class RocketMQListenerRegistrar {
         consumer.registerMessageListener((MessageListenerConcurrently) (msgs, context) -> {
             for (MessageExt msgExt : msgs) {
                 // 构造通用Message对象
-                Message message = new Message(
+                MessageOne messageOne = new MessageOne(
                         msgExt.getTopic(),
                         group,
                         msgExt.getBody(),
@@ -60,7 +60,7 @@ public class RocketMQListenerRegistrar {
 
                 try {
                     // 调用业务方法，传入Message对象
-                    method.invoke(bean, message);
+                    method.invoke(bean, messageOne);
                 } catch (Exception e) {
                     e.printStackTrace();
                     // 这里可以根据需求做失败重试或者忽略
