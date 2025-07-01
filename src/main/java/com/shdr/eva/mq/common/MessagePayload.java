@@ -9,7 +9,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public  class MessagePayload implements Serializable {
+public class MessagePayload implements Serializable {
 
     private String topic;
     private String group;
@@ -25,6 +25,7 @@ public  class MessagePayload implements Serializable {
         this.group = group;
     }
 
+    //单条发送
     public MessagePayload(String topic, String msgBody, String messageId) {
         this.topic = topic;
         this.msgBody = msgBody;
@@ -32,7 +33,16 @@ public  class MessagePayload implements Serializable {
         this.sendTime = new Date();
     }
 
-    public MessagePayload(String topic, String group, String msgBody,  String messageId) {
+    //批量发送
+    public MessagePayload(String topic, List<String> msgListBody, String messageId) {
+        this.topic = topic;
+        this.msgListBody = msgListBody;
+        this.messageId = messageId;
+        this.sendTime = new Date();
+    }
+
+    //接收
+    public MessagePayload(String topic, String group, String msgBody, String messageId) {
         this.msgBody = msgBody;
         this.group = group;
         this.topic = topic;

@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class RocketConnectTest {
 
-    private static final String NAMESRV_ADDR = "localhost:9876";
+    private static final String NAMESRV_ADDR = "47.117.166.22:9876";
     private static final String TOPIC = "testTopic";
     private static final String TAG = "tagA";
 

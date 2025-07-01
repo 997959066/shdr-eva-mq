@@ -38,16 +38,16 @@ public class RabbitMQV2ClientTest {
     }
 
     //多条发送
-//    @Test
-//    @Order(2)
-//    void testSendBatch(){
-//        List<byte[]> messages = new ArrayList<>();
-//        IntStream.range(1, 10).forEach(i -> {
-//            String msg = "RabbitMQ 第 "+ i + "条广播消息";
-//            messages.add(msg.getBytes());
-//        });
-//        client.sendBatch(TOPIC, messages);
-//    }
+    @Test
+    @Order(2)
+    void testSendBatch(){
+        List<String> messages = new ArrayList<>();
+        IntStream.range(1, 10).forEach(i -> {
+            String msg = "RabbitMQ 第 "+ i + "条广播消息";
+            messages.add(msg);
+        });
+        client.sendBatch(new MessagePayload(TOPIC,messages,"test1"));
+    }
 
 
     private static final String FANOUT_QUEUE = "test.fanout.queue";

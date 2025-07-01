@@ -10,23 +10,24 @@ import java.util.function.Consumer;
 public interface MessageClient {
 
     /**
-     * 发送单条消息到指定topic
-     * @throws Exception 发送失败时抛出异常
+     * 发送单条消息
+     * @param messagePayload
      */
-    void sendOne(MessagePayload message) ;
+    void sendOne(MessagePayload messagePayload) ;
 
     /**
-     * 批量发送多条消息到指定topic
-     * 当前批次的messageId相同
+     * 批量发送条消息
+     * @param messagePayload
      */
-    void sendBatch(MessagePayload message) ;
+    void sendBatch(MessagePayload messagePayload) ;
 
     /**
-     * 消息持续监听
+     * 消息监听
+     * @param messagePayload
      * @param callback
      * @throws Exception
      */
-    void onMessage(MessagePayload message, Consumer<MessagePayload> callback) throws Exception;
+    void onMessage(MessagePayload messagePayload, Consumer<MessagePayload> callback);
 
 
 }

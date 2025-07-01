@@ -121,30 +121,32 @@ public class RabbitMQV2Client implements MessageClient {
      * @throws Exception
      */
     @Override
-    public void onMessage(MessagePayload messagePayload, Consumer<MessagePayload> callback) throws Exception {
+    public void onMessage(MessagePayload messagePayload, Consumer<MessagePayload> callback) {
         String topic = messagePayload.getTopic();
         String group = messagePayload.getGroup();
         // 声明 fanout 类型交换机
-        channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true);
-
-        // 声明并绑定队列（这里 queue 就是 group）
-        channel.queueDeclare(group, true, false, false, null);
-        channel.queueBind(group, topic, "");
-
-        // 定义消费者
-        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-            byte[] body = delivery.getBody();
-            String messageId = delivery.getProperties().getMessageId();
-            // 构造自定义 Message 对象
-            MessagePayload msg = new MessagePayload(topic, group, new  String(body), messageId); // messageId暂时传null或从消息属性获取
+        try {
+            channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true);
+            // 声明并绑定队列（这里 queue 就是 group）
+            channel.queueDeclare(group, true, false, false, null);
+            channel.queueBind(group, topic, "");
+            // 定义消费者
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                byte[] body = delivery.getBody();
+                String messageId = delivery.getProperties().getMessageId();
+                // 构造自定义 Message 对象
+                MessagePayload msg = new MessagePayload(topic, group, new  String(body), messageId); // messageId暂时传null或从消息属性获取
 //            log.info("📨 Received message from RabbitMQ: {}", new String(body));
-            callback.accept(msg);
-        };
+                callback.accept(msg);
+            };
 
-        // 开始消费
-        channel.basicConsume(group, true, deliverCallback, consumerTag -> {
-            log.warn("❌ Consumer cancelled: {}", consumerTag);
-        });
+            // 开始消费
+            channel.basicConsume(group, true, deliverCallback, consumerTag -> {
+                log.warn("❌ Consumer cancelled: {}", consumerTag);
+            });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
