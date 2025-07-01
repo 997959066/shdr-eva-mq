@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.*;
 import com.disney.eva.framework.utils.type.ArrayUtils;
 import com.disney.eva.framework.utils.type.ClassUtils;
 import com.disney.eva.framework.utils.type.StringUtils;
+import org.springframework.stereotype.Component;
 
 public class FastJsonSerializer extends AbstractStringSerializer {
 

@@ -1,6 +1,8 @@
 package com.shdr.eva.mq.serializer;
 
 import com.alibaba.fastjson2.TypeReference;
+import org.springframework.stereotype.Component;
+
 
 public interface ValueSerializer<S> {
 

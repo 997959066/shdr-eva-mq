@@ -4,7 +4,10 @@ import com.alibaba.fastjson.JSON;
 import com.rabbitmq.client.*;
 import com.shdr.eva.mq.MessageClient;
 import com.shdr.eva.mq.common.Message;
+import com.shdr.eva.mq.serializer.FastJsonSerializer;
+import com.shdr.eva.mq.serializer.ValueSerializer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -22,6 +25,17 @@ import java.util.function.Consumer;
 public class RabbitMQV2Client implements MessageClient {
     private Connection connection; // 与 RabbitMQ 的连接对象
     private Channel channel;       // 通信信道
+
+
+
+    private  ValueSerializer<String> valueSerializer;
+
+    // 构造函数注入
+    public RabbitMQV2Client(ValueSerializer<String> valueSerializer) {
+        this.valueSerializer = valueSerializer;
+    }
+
+
 
     /**
      * 构造函数：通过明确定义参数的方式连接 RabbitMQ（适用于 localhost 环境）
@@ -51,13 +65,14 @@ public class RabbitMQV2Client implements MessageClient {
     public void sendOne(Message message) {
         String topic = message.getTopic();
         String msgId = UUID.randomUUID().toString();
-        Object body = message.getBody();
-        String msgBody = JSON.toJSONString(body);
+
+        // 手动构建 RabbitMQV2Client 实例
+        String serializeBody =  new RabbitMQV2Client(new FastJsonSerializer()).valueSerializer.serialize(message.getBody());
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().messageId(msgId).build();
         log.info("sendOne Publishing to message={} ", JSON.toJSONString(message));
         try {
             channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
-            channel.basicPublish(topic, "", props, msgBody.getBytes()); // 发送消息
+            channel.basicPublish(topic, "", props, serializeBody.getBytes()); // 发送消息
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -74,12 +89,11 @@ public class RabbitMQV2Client implements MessageClient {
             for (Message message : messageList) {
                 String topic = message.getTopic();
                 String msgId = UUID.randomUUID().toString();
-                Object body = message.getBody();
-                String msgBody = JSON.toJSONString(body);
+                String serializeBody =  new RabbitMQV2Client(new FastJsonSerializer()).valueSerializer.serialize(message.getBody());
                 AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
                         .messageId(msgId).build();
                 channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
-                channel.basicPublish(topic, "", props, msgBody.getBytes()); // 发送消息
+                channel.basicPublish(topic, "", props, serializeBody.getBytes()); // 发送消息
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -109,9 +123,13 @@ public class RabbitMQV2Client implements MessageClient {
             // 定义消费者
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 byte[] body = delivery.getBody();
+                String s = new String(body);
+
+                String unSerializeBody =  new RabbitMQV2Client(new FastJsonSerializer()).valueSerializer.unSerialize(s);
+
                 String messageId = delivery.getProperties().getMessageId();
                 // 构造自定义 Message 对象
-                Message msg = new Message(topic,group,new String(body), messageId); // messageId暂时传null或从消息属性获取
+                Message msg = new Message(topic,group,unSerializeBody, messageId); // messageId暂时传null或从消息属性获取
 //            log.info("📨 Received message from RabbitMQ: {}", new String(body));
                 callback.accept(msg);
             };

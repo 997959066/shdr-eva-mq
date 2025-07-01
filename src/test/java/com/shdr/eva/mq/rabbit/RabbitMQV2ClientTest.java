@@ -32,7 +32,7 @@ public class RabbitMQV2ClientTest {
     @Order(1)
     void testSendOne()  {
         String msg = "RabbitMQ 单条广播消息";
-        client.sendOne(new Message<String>(TOPIC,msg,"1"));
+        client.sendOne(new Message<String> (TOPIC,msg,"1"));
     }
 
     //多条发送
