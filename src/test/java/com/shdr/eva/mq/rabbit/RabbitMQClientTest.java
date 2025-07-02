@@ -55,7 +55,7 @@ public class RabbitMQClientTest {
 
     //监听消息
     @Test
-    void onMessage() throws Exception {
+    void testOnMessage() throws Exception {
 
         client.onMessage("test.topic", "test.group", msg ->
             System.out.println("✅ onMessage 收到消息 : "+ JSON.toJSONString(msg))
@@ -67,7 +67,7 @@ public class RabbitMQClientTest {
 
     //批量监听消息
     @Test
-    void testBatchConsume() throws Exception {
+    void testOnBatchMessage() throws Exception {
 
         client.onBatchMessage(
                 "test.topic",
