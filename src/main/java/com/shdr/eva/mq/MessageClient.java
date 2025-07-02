@@ -1,7 +1,6 @@
 package com.shdr.eva.mq;
 
 import com.shdr.eva.mq.common.Message;
-
 import java.util.List;
 import java.util.function.Consumer;
 

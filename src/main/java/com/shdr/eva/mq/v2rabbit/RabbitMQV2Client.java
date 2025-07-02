@@ -80,18 +80,17 @@ public class RabbitMQV2Client implements MessageClient {
 
     /**
      * rabbitmq自身不支持批量，需要手动实现
-     * <p>
-     * [{},{}]
+     * 不同topic场景
+     * 需要开启 ACK
      */
     @Override
     public void sendBatch(List<Message> messageList) {
         try {
             for (Message message : messageList) {
                 String topic = message.getTopic();
-                String msgId = UUID.randomUUID().toString();
                 String serializeBody =  new RabbitMQV2Client(new FastJsonSerializer()).valueSerializer.serialize(message.getBody());
                 AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
-                        .messageId(msgId).build();
+                        .messageId(UUID.randomUUID().toString()).build();
                 channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
                 channel.basicPublish(topic, "", props, serializeBody.getBytes()); // 发送消息
             }
@@ -110,27 +109,25 @@ public class RabbitMQV2Client implements MessageClient {
      * @param topic
      * @param group
      * @param callback
-     * @throws Exception
      */
     @Override
     public void onMessage(String topic,String group, Consumer<Message> callback) {
-        // 声明 fanout 类型交换机
         try {
+            // 声明 fanout 类型交换机
             channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true);
             // 声明并绑定队列（这里 queue 就是 group）
             channel.queueDeclare(group, true, false, false, null);
             channel.queueBind(group, topic, "");
             // 定义消费者
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                byte[] body = delivery.getBody();
-                String s = new String(body);
-
-                String unSerializeBody =  new RabbitMQV2Client(new FastJsonSerializer()).valueSerializer.unSerialize(s);
+                String body = new String(delivery.getBody());
+                //消费者时候反序列化
+                String unSerializeBody =  new RabbitMQV2Client(new FastJsonSerializer()).valueSerializer.unSerialize(body);
 
                 String messageId = delivery.getProperties().getMessageId();
                 // 构造自定义 Message 对象
                 Message msg = new Message(topic,group,unSerializeBody, messageId); // messageId暂时传null或从消息属性获取
-//            log.info("📨 Received message from RabbitMQ: {}", new String(body));
+
                 callback.accept(msg);
             };
             // 开始消费
@@ -141,6 +138,12 @@ public class RabbitMQV2Client implements MessageClient {
             throw new RuntimeException(e);
         }
     }
+
+
+
+
+
+
 
 
 
