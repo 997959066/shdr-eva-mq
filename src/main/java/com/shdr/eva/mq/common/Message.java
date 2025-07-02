@@ -1,14 +1,11 @@
 package com.shdr.eva.mq.common;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONReader;
-import com.alibaba.fastjson2.JSONWriter;
-import com.shdr.eva.mq.serializer.ValueSerializer;
-import lombok.Data;
-
+import lombok.Getter;
+import lombok.Setter;
 import java.util.Date;
 
-@Data
+@Getter
+@Setter
 public class Message<T> {
 
     private String topic;

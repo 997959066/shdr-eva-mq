@@ -31,7 +31,7 @@ public class RabbitMQClientTest {
     @Test
     void testSendOne(){
 
-        User user = new User(1,"zhang3",19);
+        User user = new User(1,"zhao1");
 
         client.sendOne(new Message("test.topic",user));
     }
@@ -40,9 +40,9 @@ public class RabbitMQClientTest {
     @Test
     void testSendBatch(){
 
-        User user1 = new User(2,"wang2",16);
-        User user2 = new User(3,"zhang3",12);
-        User user3 = new User(4,"li4",12);
+        User user1 = new User(2,"wang2");
+        User user2 = new User(3,"zhang3");
+        User user3 = new User(4,"li4");
 
         List<Message> messageList = new ArrayList<>();
         messageList.add(new Message("test.topic",user1));
