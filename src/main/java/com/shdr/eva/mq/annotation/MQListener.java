@@ -9,4 +9,8 @@ import java.lang.annotation.*;
 public @interface MQListener {
     String topic();
     String group();
+
+    // 新增参数
+    int batchSize() default 1;          // 默认为单条
+    long intervalMs() default 5000;     // 默认5秒定时触发
 }

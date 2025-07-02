@@ -9,6 +9,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
 @Component
 public class MQListenerRegistrar implements BeanPostProcessor {
@@ -21,35 +22,50 @@ public class MQListenerRegistrar implements BeanPostProcessor {
 
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-        // 扫描每个bean的方法
         Method[] methods = bean.getClass().getMethods();
         for (Method method : methods) {
             if (method.isAnnotationPresent(MQListener.class)) {
                 MQListener listener = method.getAnnotation(MQListener.class);
                 String topic = listener.topic();
                 String group = listener.group();
+                int batchSize = listener.batchSize();
+                long intervalMs = listener.intervalMs();
 
-                // 注册监听
                 try {
-                    rabbitMQClient.onMessage(topic, group, msg -> {
-                        try {
-                            // 反射调用被注解的方法，参数类型为Message
-                            if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == Message.class) {
+                    Class<?>[] paramTypes = method.getParameterTypes();
+
+                    if (paramTypes.length == 1 && paramTypes[0] == Message.class) {
+                        // ✅ 单条监听
+                        rabbitMQClient.onMessage(topic, group, msg -> {
+                            try {
                                 method.invoke(bean, msg);
-                            } else {
-                                // 你可以根据需要支持更多参数或回调方式
-                                throw new IllegalArgumentException("监听方法必须只接受一个参数，类型为 Message");
+                            } catch (Exception e) {
+                                e.printStackTrace();
                             }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    });
+                        });
+                    } else if (paramTypes.length == 1 &&
+                            List.class.isAssignableFrom(paramTypes[0]) &&
+                            method.getGenericParameterTypes()[0].getTypeName().startsWith("java.util.List<com.shdr.eva.mq.common.Message")) {
+
+                        // ✅ 批量监听
+                        rabbitMQClient.onBatchMessage(topic, group, batchSize, intervalMs, messages -> {
+                            try {
+                                method.invoke(bean, messages);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        });
+                    } else {
+                        throw new IllegalArgumentException("监听方法参数必须为 Message 或 List<Message>");
+                    }
                 } catch (Exception e) {
                     throw new RuntimeException("MQ监听注册失败", e);
                 }
+
                 System.out.printf("✅ RabbitMQ Consumer started: topic=%s, group=%s\n", topic, group);
             }
         }
         return bean;
     }
+
 }

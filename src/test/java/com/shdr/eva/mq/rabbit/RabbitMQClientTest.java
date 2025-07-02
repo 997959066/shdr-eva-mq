@@ -31,7 +31,7 @@ public class RabbitMQClientTest {
     @Test
     void testSendOne(){
 
-        User user = new User(1,"zhao1");
+        User user = new User(1,"赵1");
 
         client.sendOne(new Message("test.topic",user));
     }
@@ -40,9 +40,9 @@ public class RabbitMQClientTest {
     @Test
     void testSendBatch(){
 
-        User user1 = new User(2,"wang2");
-        User user2 = new User(3,"zhang3");
-        User user3 = new User(4,"li4");
+        User user1 = new User(1,"王1");
+        User user2 = new User(2,"刘2");
+        User user3 = new User(3,"张3");
 
         List<Message> messageList = new ArrayList<>();
         messageList.add(new Message("test.topic",user1));
@@ -65,7 +65,7 @@ public class RabbitMQClientTest {
     }
 
 
-    //批量监听消息
+    //测试注入使用方式，批量监听消息
     @Test
     void testOnBatchMessage() throws Exception {
 
@@ -85,5 +85,23 @@ public class RabbitMQClientTest {
     }
 
 
+
+
+
+    //发送多条消息
+    @Test
+    void testSendBatchMsg(){
+
+        User user1 = new User(1,"王1");
+        User user2 = new User(2,"刘2");
+        User user3 = new User(3,"张3");
+
+        List<Message> messageList = new ArrayList<>();
+        messageList.add(new Message("test.topic.batch",user1));
+        messageList.add(new Message("test.topic.batch",user2));
+        messageList.add(new Message("test.topic.batch",user3));
+
+        client.sendBatch(messageList);
+    }
 }
 
