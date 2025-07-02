@@ -1,10 +1,8 @@
 package com.shdr.eva.mq.rabbit;
 
-import com.alibaba.fastjson.JSON;
 import com.rabbitmq.client.*;
 import com.shdr.eva.mq.MessageClient;
 import com.shdr.eva.mq.common.Message;
-import com.shdr.eva.mq.common.User;
 import com.shdr.eva.mq.serializer.FastJsonSerializer;
 import com.shdr.eva.mq.serializer.ValueSerializer;
 import lombok.extern.slf4j.Slf4j;
@@ -17,25 +15,20 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 /**
- * RabbitMQ 实现，支持基础发送接收、topic与fanout发布订阅、批量与缓存发送
- * RabbitMQ
+ * RabbitMQ 实现，支持基础发送接收、topic与fanout发布订阅、批量发送
  */
 @Component
 @Slf4j
 public class RabbitMQClient implements MessageClient {
+
     private Connection connection; // 与 RabbitMQ 的连接对象
     private Channel channel;       // 通信信道
 
-
-
     private  ValueSerializer<String> valueSerializer;
-
     // 构造函数注入
     public RabbitMQClient(ValueSerializer<String> valueSerializer) {
         this.valueSerializer = valueSerializer;
     }
-
-
 
     /**
      * 构造函数：通过明确定义参数的方式连接 RabbitMQ（适用于 localhost 环境）

@@ -15,5 +15,6 @@ public class RabbitConsumer {
     public void handleMessage(Message message) {
         System.out.println("✅ [RabbitMQ Consumer] 收到消息:" + JSON.toJSONString(message));
     }
+
 }
 
