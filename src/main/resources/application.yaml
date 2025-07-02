@@ -1,7 +1,2 @@
-spring:
-  rabbitmq:
-    addresses: rabbitmq.latest.shdrapps.disney.com
-    port: 80
-    virtual-host: /mo-service-latest
-    username: mo-service-latest
-    password: STPvy9L64EnTmKKcSUGuxZNDX6
+server:
+  port: 8081
