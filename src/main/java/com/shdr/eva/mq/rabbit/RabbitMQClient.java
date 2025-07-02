@@ -1,4 +1,4 @@
-package com.shdr.eva.mq.v2rabbit;
+package com.shdr.eva.mq.rabbit;
 
 import com.alibaba.fastjson.JSON;
 import com.rabbitmq.client.*;

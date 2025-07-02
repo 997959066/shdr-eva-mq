@@ -1,7 +1,6 @@
 package com.shdr.eva.mq.rabbit;
 
 import com.shdr.eva.mq.common.Message;
-import com.shdr.eva.mq.v2rabbit.RabbitMQClient;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;

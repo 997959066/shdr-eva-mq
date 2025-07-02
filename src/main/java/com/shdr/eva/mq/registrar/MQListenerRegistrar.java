@@ -3,7 +3,7 @@ package com.shdr.eva.mq.registrar;
 
 import com.shdr.eva.mq.annotation.MQListener;
 import com.shdr.eva.mq.common.Message;
-import com.shdr.eva.mq.v2rabbit.RabbitMQClient;
+import com.shdr.eva.mq.rabbit.RabbitMQClient;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
