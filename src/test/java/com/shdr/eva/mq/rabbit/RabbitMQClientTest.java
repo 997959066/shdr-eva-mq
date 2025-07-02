@@ -27,41 +27,41 @@ public class RabbitMQClientTest {
     }
 
 
-    //单条消息
+    // 发送单条消息
     @Test
-    @Order(1)
-    void testSendOne()  {
+    void testSendOne(){
+
         User user = new User(1,"zhang3",19);
 
-        client.sendOne(new Message<User> ("test.topic",user));
+        client.sendOne(new Message("test.topic",user));
     }
 
-    //多条发送
+    //发送多条消息
     @Test
-    @Order(2)
     void testSendBatch(){
+
         User user1 = new User(2,"wang2",16);
         User user2 = new User(3,"zhang3",12);
+        User user3 = new User(4,"li4",12);
 
         List<Message> messageList = new ArrayList<>();
-        messageList.add(new Message<User>("test.topic",user1));
-        messageList.add(new Message<User>("test.topic",user2));
+        messageList.add(new Message("test.topic",user1));
+        messageList.add(new Message("test.topic",user2));
+        messageList.add(new Message("test.topic",user3));
 
         client.sendBatch(messageList);
     }
 
 
-
+    //监听消息
     @Test
-    @Order(4)
     void onMessage() throws Exception {
 
-        client.onMessage("test.topic", "test.group", msg -> {
-            System.out.println("✅ onMessage 收到消息 : "+ JSON.toJSONString(msg));
-        });
-        // 保持主线程存活
-        Thread.currentThread().join();
+        client.onMessage("test.topic", "test.group", msg ->
+            System.out.println("✅ onMessage 收到消息 : "+ JSON.toJSONString(msg))
+        );
 
+        Thread.currentThread().join();
     }
 
 
