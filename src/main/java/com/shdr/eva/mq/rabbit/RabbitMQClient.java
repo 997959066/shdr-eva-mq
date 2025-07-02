@@ -64,8 +64,9 @@ public class RabbitMQClient implements MessageClient {
     @Override
     public void sendOne(Message message) {
         String topic = message.getTopic();
-
-        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().messageId(UUID.randomUUID().toString()).build();
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
+                .messageId(UUID.randomUUID().toString())
+                .type(message.getBody().getClass().getName()).build();
         try {
             channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
             //序列化消息
@@ -87,8 +88,8 @@ public class RabbitMQClient implements MessageClient {
         try {
             for (Message message : messageList) {
                 String topic = message.getTopic();
-                AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
-                        .messageId(UUID.randomUUID().toString()).build();
+                AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().
+                type(message.getBody().getClass().getName()).messageId(UUID.randomUUID().toString()).build();
                 channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
                 //序列化消息
                 String serializeBody =  new RabbitMQClient(new FastJsonSerializer()).valueSerializer.serialize(message.getBody());
@@ -121,14 +122,20 @@ public class RabbitMQClient implements MessageClient {
             // 定义消费者
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String body = new String(delivery.getBody());
-                //消费者时候反序列化
-                User unSerializeBody =  new RabbitMQClient(new FastJsonSerializer()).valueSerializer.unSerialize(body, User.class);
+                // 接收端直接使用Class对象
+                try {
+                    String messageId = delivery.getProperties().getMessageId();
+                    //消费者时候反序列化
+                    Class<?> messageClass = Class.forName(delivery.getProperties().getType());
+                    Object unSerializeBody = new RabbitMQClient(new FastJsonSerializer()).valueSerializer.unSerialize(body, messageClass);
+                    // 构造自定义 Message 对象
+                    Message msg = new Message(topic,group,unSerializeBody, messageId); // messageId暂时传null或从消息属性获取
 
-                String messageId = delivery.getProperties().getMessageId();
-                // 构造自定义 Message 对象
-                Message msg = new Message(topic,group,unSerializeBody, messageId); // messageId暂时传null或从消息属性获取
+                    callback.accept(msg);
+                } catch (ClassNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
 
-                callback.accept(msg);
             };
             // 开始消费
             channel.basicConsume(group, true, deliverCallback, consumerTag -> {
