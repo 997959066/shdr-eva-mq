@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.rabbitmq.client.*;
 import com.shdr.eva.mq.MessageClient;
 import com.shdr.eva.mq.common.Message;
+import com.shdr.eva.mq.common.User;
 import com.shdr.eva.mq.serializer.FastJsonSerializer;
 import com.shdr.eva.mq.serializer.ValueSerializer;
 import lombok.extern.slf4j.Slf4j;
@@ -121,7 +122,7 @@ public class RabbitMQClient implements MessageClient {
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 String body = new String(delivery.getBody());
                 //消费者时候反序列化
-                String unSerializeBody =  new RabbitMQClient(new FastJsonSerializer()).valueSerializer.unSerialize(body);
+                User unSerializeBody =  new RabbitMQClient(new FastJsonSerializer()).valueSerializer.unSerialize(body, User.class);
 
                 String messageId = delivery.getProperties().getMessageId();
                 // 构造自定义 Message 对象

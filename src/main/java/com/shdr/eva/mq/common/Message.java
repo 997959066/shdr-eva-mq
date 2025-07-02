@@ -25,6 +25,12 @@ public class Message<T> {
 
 
     // 用于生产者，序列化
+    public Message(String topic, T body) {
+        this.topic = topic;
+        this.body = body;
+        this.sendTime = new Date();
+    }
+
     public Message(String topic, T body, String messageId) {
         this.topic = topic;
         this.body = body;
