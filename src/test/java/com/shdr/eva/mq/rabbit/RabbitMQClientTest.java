@@ -27,27 +27,32 @@ public class RabbitMQClientTest {
     }
 
 
+
+
+
     // 发送单条消息
     @Test
     void testSendOne(){
 
-        User user = new User(1,"赵1");
+        User user = new User(1,"王1");
 
         client.sendOne(new Message("test.topic",user));
     }
 
+
     //发送多条消息
     @Test
     void testSendBatch(){
+        //消息body,支持多种数据类型
 
-        User user1 = new User(1,"王1");
-        User user2 = new User(2,"刘2");
-        User user3 = new User(3,"张3");
+        User user1 = new User(3,"张3");
+        Integer in2 = 9527;
+        String str3 = "我是一个字符串";
 
         List<Message> messageList = new ArrayList<>();
         messageList.add(new Message("test.topic",user1));
-        messageList.add(new Message("test.topic",user2));
-        messageList.add(new Message("test.topic",user3));
+        messageList.add(new Message("test.topic",in2));
+        messageList.add(new Message("test.topic",str3));
 
         client.sendBatch(messageList);
     }
@@ -57,8 +62,10 @@ public class RabbitMQClientTest {
     @Test
     void testOnMessage() throws Exception {
 
-        client.onMessage("test.topic", "test.group", msg ->
-            System.out.println("✅ onMessage 收到消息 : "+ JSON.toJSONString(msg))
+        client.onMessage(
+                "test.topic",
+                "test.group",
+                message -> System.out.println("✅ onMessage 收到消息 : "+ JSON.toJSONString(message))
         );
 
         Thread.currentThread().join();
@@ -70,14 +77,12 @@ public class RabbitMQClientTest {
     void testOnBatchMessage() throws Exception {
 
         client.onBatchMessage(
-                "test.topic",
-                "test.group",
+                "test.topic.batch",
+                "test.group.batch",
                 5, // 每5条触发一次
-                1000, // 等待时间毫秒 MILLISECONDS
-                batch -> {
-                    for (Message msg : batch) {
-                        System.out.println("📩 onBatchMessage  " + JSON.toJSONString(msg));
-                    }
+                1000,       // 等待时间毫秒 MILLISECONDS
+                batchMessage -> {
+                    batchMessage.forEach(msg -> System.out.println("📩 onBatchMessage  " + JSON.toJSONString(msg)));
                 }
         );
 
@@ -87,14 +92,13 @@ public class RabbitMQClientTest {
 
 
 
-
     //发送多条消息
     @Test
     void testSendBatchMsg(){
 
-        User user1 = new User(1,"王1");
-        User user2 = new User(2,"刘2");
-        User user3 = new User(3,"张3");
+        User user1 = new User(2,"刘2");
+        User user2 = new User(3,"张3");
+        User user3 = new User(4,"赵4");
 
         List<Message> messageList = new ArrayList<>();
         messageList.add(new Message("test.topic.batch",user1));
