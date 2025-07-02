@@ -82,6 +82,7 @@ public class RabbitMQClient implements MessageClient {
     @Override
     public void sendBatch(List<Message> messageList) {
         try {
+            channel.confirmSelect(); // ✅ 开启 confirm 模式
             for (Message message : messageList) {
                 String topic = message.getTopic();
                 AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().
@@ -91,7 +92,10 @@ public class RabbitMQClient implements MessageClient {
                 String serializeBody = new RabbitMQClient(new FastJsonSerializer()).valueSerializer.serialize(message.getBody());
                 channel.basicPublish(topic, "", props, serializeBody.getBytes()); // 发送消息
             }
-        } catch (IOException e) {
+            // ✅ 等待所有消息确认（同步阻塞）
+            channel.waitForConfirmsOrDie(5000); // 最多等待 5 秒 ,考虑配置参数
+            System.out.println("✅ 批量消息已全部发送并确认");
+        } catch (IOException | InterruptedException | TimeoutException e) {
             throw new RuntimeException(e);
         }
     }
@@ -142,9 +146,7 @@ public class RabbitMQClient implements MessageClient {
 
 
     @Override
-    public void onBatchMessage(String topic, String group,
-                               int batchSize, long millisecond,
-                               Consumer<List<Message>> callback) {
+    public void onBatchMessage(String topic, String group, int batchSize, long millisecond, Consumer<List<Message>> callback) {
 
         List<Message> buffer = Collections.synchronizedList(new ArrayList<>());
         try {
