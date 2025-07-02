@@ -3,6 +3,9 @@ package com.shdr.eva.mq.common;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * 测试对象
+ */
 @Getter
 @Setter
 public class User {
