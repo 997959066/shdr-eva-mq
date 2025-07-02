@@ -1,4 +1,4 @@
-package com.shdr.eva.mq.registrar;
+package com.shdr.eva.mq.rabbit.registrar;
 
 
 import com.shdr.eva.mq.annotation.MQListener;
