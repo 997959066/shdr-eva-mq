@@ -31,13 +31,6 @@ public class Message<T> {
         this.sendTime = new Date();
     }
 
-    public Message(String topic, T body, String messageId) {
-        this.topic = topic;
-        this.body = body;
-        this.messageId = messageId;
-        this.sendTime = new Date();
-    }
-
     // 用于消费者，反序列化
     public Message(String topic, String group, T body, String messageId) {
         this.topic = topic;

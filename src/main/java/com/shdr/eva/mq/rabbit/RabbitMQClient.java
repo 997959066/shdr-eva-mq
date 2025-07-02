@@ -64,14 +64,13 @@ public class RabbitMQClient implements MessageClient {
     @Override
     public void sendOne(Message message) {
         String topic = message.getTopic();
-        String msgId = UUID.randomUUID().toString();
 
-        // 手动构建 RabbitMQV2Client 实例
-        String serializeBody =  new RabbitMQClient(new FastJsonSerializer()).valueSerializer.serialize(message.getBody());
-        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().messageId(msgId).build();
-        log.info("sendOne Publishing to message={} ", JSON.toJSONString(message));
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().messageId(UUID.randomUUID().toString()).build();
         try {
             channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
+            //序列化消息
+            String serializeBody =  new RabbitMQClient(new FastJsonSerializer()).valueSerializer.serialize(message.getBody());
+            log.info("sendOne Publishing to message={} ", serializeBody);
             channel.basicPublish(topic, "", props, serializeBody.getBytes()); // 发送消息
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -88,10 +87,11 @@ public class RabbitMQClient implements MessageClient {
         try {
             for (Message message : messageList) {
                 String topic = message.getTopic();
-                String serializeBody =  new RabbitMQClient(new FastJsonSerializer()).valueSerializer.serialize(message.getBody());
                 AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
                         .messageId(UUID.randomUUID().toString()).build();
                 channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
+                //序列化消息
+                String serializeBody =  new RabbitMQClient(new FastJsonSerializer()).valueSerializer.serialize(message.getBody());
                 channel.basicPublish(topic, "", props, serializeBody.getBytes()); // 发送消息
             }
         } catch (IOException e) {
