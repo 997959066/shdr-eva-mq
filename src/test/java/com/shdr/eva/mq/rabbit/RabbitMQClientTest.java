@@ -65,7 +65,24 @@ public class RabbitMQClientTest {
     }
 
 
+    //批量监听消息
+    @Test
+    void testBatchConsume() throws Exception {
 
+        client.onBatchMessage(
+                "test.topic",
+                "test.group",
+                5, // 每5条触发一次
+                1000, // 等待时间毫秒 MILLISECONDS
+                batch -> {
+                    for (Message msg : batch) {
+                        System.out.println("📩 onBatchMessage  " + JSON.toJSONString(msg));
+                    }
+                }
+        );
+
+        Thread.currentThread().join();
+    }
 
 
 }

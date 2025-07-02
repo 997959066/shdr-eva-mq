@@ -9,8 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
@@ -23,8 +25,9 @@ public class RabbitMQClient implements MessageClient {
 
     private Connection connection; // 与 RabbitMQ 的连接对象
     private Channel channel;       // 通信信道
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private ValueSerializer<String> valueSerializer;
 
-    private  ValueSerializer<String> valueSerializer;
     // 构造函数注入
     public RabbitMQClient(ValueSerializer<String> valueSerializer) {
         this.valueSerializer = valueSerializer;
@@ -63,7 +66,7 @@ public class RabbitMQClient implements MessageClient {
         try {
             channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
             //序列化消息
-            String serializeBody =  new RabbitMQClient(new FastJsonSerializer()).valueSerializer.serialize(message.getBody());
+            String serializeBody = new RabbitMQClient(new FastJsonSerializer()).valueSerializer.serialize(message.getBody());
             log.info("sendOne Publishing to message={} ", serializeBody);
             channel.basicPublish(topic, "", props, serializeBody.getBytes()); // 发送消息
         } catch (IOException e) {
@@ -82,18 +85,16 @@ public class RabbitMQClient implements MessageClient {
             for (Message message : messageList) {
                 String topic = message.getTopic();
                 AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().
-                type(message.getBody().getClass().getName()).messageId(UUID.randomUUID().toString()).build();
+                        type(message.getBody().getClass().getName()).messageId(UUID.randomUUID().toString()).build();
                 channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true); // 声明交换机
                 //序列化消息
-                String serializeBody =  new RabbitMQClient(new FastJsonSerializer()).valueSerializer.serialize(message.getBody());
+                String serializeBody = new RabbitMQClient(new FastJsonSerializer()).valueSerializer.serialize(message.getBody());
                 channel.basicPublish(topic, "", props, serializeBody.getBytes()); // 发送消息
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
-
-
 
 
     /**
@@ -105,7 +106,7 @@ public class RabbitMQClient implements MessageClient {
      * @param callback
      */
     @Override
-    public void onMessage(String topic,String group, Consumer<Message> callback) {
+    public void onMessage(String topic, String group, Consumer<Message> callback) {
         try {
             // 声明 fanout 类型交换机
             channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true);
@@ -122,7 +123,7 @@ public class RabbitMQClient implements MessageClient {
                     Class<?> messageClass = Class.forName(delivery.getProperties().getType());
                     Object unSerializeBody = new RabbitMQClient(new FastJsonSerializer()).valueSerializer.unSerialize(body, messageClass);
                     // 构造自定义 Message 对象
-                    Message msg = new Message(topic,group,unSerializeBody, messageId); // messageId暂时传null或从消息属性获取
+                    Message msg = new Message(topic, group, unSerializeBody, messageId); // messageId暂时传null或从消息属性获取
 
                     callback.accept(msg);
                 } catch (ClassNotFoundException e) {
@@ -140,17 +141,65 @@ public class RabbitMQClient implements MessageClient {
     }
 
 
+    @Override
+    public void onBatchMessage(String topic, String group,
+                               int batchSize, long millisecond,
+                               Consumer<List<Message>> callback) {
 
+        List<Message> buffer = Collections.synchronizedList(new ArrayList<>());
+        try {
+            channel.exchangeDeclare(topic, BuiltinExchangeType.FANOUT, true);
+            channel.queueDeclare(group, true, false, false, null);
+            channel.queueBind(group, topic, "");
 
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String body = new String(delivery.getBody());
+                String messageId = delivery.getProperties().getMessageId();
+                try {
+                    Class<?> messageClass = Class.forName(delivery.getProperties().getType());
 
+                    Object unSerializeBody = new RabbitMQClient(new FastJsonSerializer()).valueSerializer.unSerialize(body, messageClass);
+                    Message message = new Message<>(
+                            topic,
+                            group,
+                            unSerializeBody,
+                            messageId
+                    );
 
+                    buffer.add(message);
 
+                    if (buffer.size() >= batchSize) {
+                        flush(buffer, callback);
+                    }
+                } catch (ClassNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+            };
 
+            // 定时轮询触发批处理（防止不满 batchSize 时积压）
+            scheduler.scheduleAtFixedRate(() -> {
+                flush(buffer, callback);
+            }, millisecond, millisecond, TimeUnit.MILLISECONDS);
 
+            channel.basicConsume(group, true, deliverCallback, consumerTag -> {
+                System.out.println("❌ 消费者取消: " + consumerTag);
+            });
 
+        } catch (IOException e) {
+            throw new RuntimeException("RabbitMQ 批量监听失败", e);
+        }
 
+    }
 
-
+    private <T> void flush(List<Message> buffer, Consumer<List<Message>> callback) {
+        synchronized (buffer) {
+            if (!buffer.isEmpty()) {
+                List<Message> batch = new ArrayList<>(buffer);
+                buffer.clear();
+                callback.accept(batch);
+            }
+        }
+    }
 
 
     /**
