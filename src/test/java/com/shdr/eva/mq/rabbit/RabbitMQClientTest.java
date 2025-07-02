@@ -27,6 +27,9 @@ public class RabbitMQClientTest {
     }
 
 
+
+
+
     // 发送单条消息
     @Test
     void testSendOne(){
@@ -35,6 +38,7 @@ public class RabbitMQClientTest {
 
         client.sendOne(new Message("test.topic",user));
     }
+
 
     //发送多条消息
     @Test
@@ -57,8 +61,10 @@ public class RabbitMQClientTest {
     @Test
     void testOnMessage() throws Exception {
 
-        client.onMessage("test.topic", "test.group", msg ->
-            System.out.println("✅ onMessage 收到消息 : "+ JSON.toJSONString(msg))
+        client.onMessage(
+                "test.topic",
+                "test.group",
+                message -> System.out.println("✅ onMessage 收到消息 : "+ JSON.toJSONString(message))
         );
 
         Thread.currentThread().join();
@@ -70,20 +76,17 @@ public class RabbitMQClientTest {
     void testOnBatchMessage() throws Exception {
 
         client.onBatchMessage(
-                "test.topic",
-                "test.group",
+                "test.topic.batch",
+                "test.group.batch",
                 5, // 每5条触发一次
-                1000, // 等待时间毫秒 MILLISECONDS
-                batch -> {
-                    for (Message msg : batch) {
-                        System.out.println("📩 onBatchMessage  " + JSON.toJSONString(msg));
-                    }
+                1000,       // 等待时间毫秒 MILLISECONDS
+                batchMessage -> {
+                    batchMessage.forEach(msg -> System.out.println("📩 onBatchMessage  " + JSON.toJSONString(msg)));
                 }
         );
 
         Thread.currentThread().join();
     }
-
 
 
 
