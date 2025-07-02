@@ -4,11 +4,10 @@ import com.alibaba.fastjson.JSON;
 import com.shdr.eva.mq.annotation.MQListener;
 import com.shdr.eva.mq.common.Message;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
 
 /**
- * 使用代码示例
+ * 注解使用示例
  */
 @Component
 public class RabbitConsumer {

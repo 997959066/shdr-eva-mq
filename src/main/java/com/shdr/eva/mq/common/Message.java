@@ -21,14 +21,14 @@ public class Message<T> {
     private Date receiveTime;
 
 
-    // 用于生产者，序列化
+    // 用于生产者
     public Message(String topic, T body) {
         this.topic = topic;
         this.body = body;
         this.sendTime = new Date();
     }
 
-    // 用于消费者，反序列化
+    // 用于消费者
     public Message(String topic, String group, T body, String messageId) {
         this.topic = topic;
         this.group = group;

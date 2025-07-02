@@ -1,13 +1,8 @@
 package com.shdr.eva.mq;
-
 import com.shdr.eva.mq.common.Message;
-
 import java.util.List;
 import java.util.function.Consumer;
-
-
 public interface MessageClient {
-
     /**
      * 发送单条消息
      *
@@ -37,8 +32,8 @@ public interface MessageClient {
      * @param topic
      * @param group
      * @param batchSize
-     * @param millis
+     * @param millisecond
      * @param batchCallback
      */
-    void onBatchMessage(String topic, String group, int batchSize, long millis, Consumer<List<Message>> batchCallback);
+    void onBatchMessage(String topic, String group, int batchSize, long millisecond, Consumer<List<Message>> batchCallback);
 }
