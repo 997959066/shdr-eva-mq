@@ -22,7 +22,7 @@ public interface MessageClient {
      *
      * @param topic
      * @param group
-     * @param callback
+     * @param callback 需求 ack 确认 ， 延迟消息，模式
      */
     void onMessage(String topic, String group, Consumer<Message> callback);
 
