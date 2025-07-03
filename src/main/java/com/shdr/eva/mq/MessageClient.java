@@ -1,5 +1,7 @@
 package com.shdr.eva.mq;
 import com.shdr.eva.mq.common.Message;
+
+import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
 public interface MessageClient {
@@ -22,7 +24,7 @@ public interface MessageClient {
      *
      * @param topic
      * @param group
-     * @param callback 需求 ack 确认 ， 延迟消息，模式
+     * @param callback 需求 ack 确认 ， 延迟消息，模式切换。点对点-fanout
      */
     void onMessage(String topic, String group, Consumer<Message> callback);
 
@@ -36,4 +38,10 @@ public interface MessageClient {
      * @param batchCallback
      */
     void onBatchMessage(String topic, String group, int batchSize, long millisecond, Consumer<List<Message>> batchCallback);
+
+
+    //TTL + DLX 死信队列实现延迟消息
+     void sendDelay(Message message, int delayMs) throws IOException, IOException;
+
+    void onMessageDelay(String topic, String group, Consumer<Message> callback);
 }

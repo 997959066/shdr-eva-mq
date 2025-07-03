@@ -40,6 +40,7 @@ public class RabbitMQClientTest {
     }
 
 
+
     //发送多条消息
     @Test
     void testSendBatch(){
@@ -63,7 +64,7 @@ public class RabbitMQClientTest {
     void testOnMessage() throws Exception {
 
         client.onMessage(
-                "test.topic",
+                "test.topic.delay",
                 "test.group",
                 message -> System.out.println("✅ onMessage 收到消息 : "+ JSON.toJSONString(message))
         );
@@ -106,6 +107,32 @@ public class RabbitMQClientTest {
         messageList.add(new Message("test.topic.batch",user3));
 
         client.sendBatch(messageList);
+    }
+
+
+
+
+
+    // 测试延迟消息
+    @Test
+    void testSendDelay() throws IOException {
+
+        User user = new User(1,"王1");
+        client.sendDelay(new Message("test.topic.delay1",user),10000);
+
+    }
+
+    //监听消息
+    @Test
+    void testDelayOnMessage() throws Exception {
+
+        client.onMessageDelay(
+                "test.topic.delay1",
+                "test.group.delay1",
+                message -> System.out.println("✅ onMessageDelay 收到消息 : "+ JSON.toJSONString(message))
+        );
+
+        Thread.currentThread().join();
     }
 }
 

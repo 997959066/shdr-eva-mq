@@ -19,7 +19,7 @@ public class DirectRabbitConfig {
 
     public static final String DIRECT_QUEUE = "direct.queue";
     public static final String DIRECT_EXCHANGE = "direct.exchange";
-    public static final String DIRECT_ROUTING_KEY = "direct.key";
+    public static final String DIRECT_ROUTING_KEY = "direct.key"; //需要测一下写死情况
 
     //创建队列
     @Bean
