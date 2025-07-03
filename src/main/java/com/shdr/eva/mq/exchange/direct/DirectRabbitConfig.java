@@ -9,9 +9,10 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * Direct exchange（直连交换机）
- * 特点：一对一精确投递，routingKey 完全匹配
- * exchange + routingKey
- *
+ * 典型场景：精准投递、点对点，routingKey 完全匹配
+ * 配置时 ：exchange routingKey queue
+ * 生产者指定 ：exchange + routingKey
+ * 消费者指定 ：queue
  */
 @Configuration
 public class DirectRabbitConfig {

@@ -7,6 +7,13 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Fanout exchange（扇型交换机）
+ * 典型场景：广播、群发通知
+ * 配置时 ：exchange queue
+ * 生产者指定 ：exchange
+ * 消费者指定 ：exchange + queue
+ */
 @Configuration
 public class FanoutRabbitConfig {
 
